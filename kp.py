@@ -146,7 +146,12 @@ def main(analyse, get=None, new_password=None):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="Command line interface to a keepass database.\n"
+                    "Set the required environment variables:\n"
+                    "- KEEPASSDB (path to your keepass database file)\n- KEEPASSDB_PASSWORD"
+    )
     parser.add_argument("--analyse", "-a", action="store_true", help="Check for conflicting copies and report conflicts")
     parser.add_argument("--get", "-g", type=str, help="Get entry by title or group/title")
     parser.add_argument("--update-password", "-u", type=str, help="Update password; use with -g to select an entry to update")
