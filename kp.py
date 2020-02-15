@@ -79,7 +79,10 @@ def main(analyse, get=None, new_password=None, show_password=False, show_details
     db_path = environ.get("KEEPASSDB")
     password = environ.get("KEEPASSDB_PASSWORD")
     if not all([db_path, password]):
-        logger.error("You must set the KEEPASSDB and KEEPASSDB_PASSWORD variables")
+        logger.error(
+            "Missing environment variable(s): %s",
+            ", ".join([var for var in ["KEEPASSDB", "KEEPASSDB_PASSWORD"] if environ.get(var) is None])
+        )
         return
 
     core_db_path = Path(db_path)
