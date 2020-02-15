@@ -75,7 +75,7 @@ def compare(base_entries, comparison_db, base_name, comparison_name, show_confli
                 print(f"{entry.title} in {base_name} conflicts on {', '.join(mismatched)}")
 
 
-def main(analyse, get=None, new_password=None, show_password=False):
+def main(analyse, get=None, new_password=None, show_password=False, show_details=False):
     db_path = environ.get("KEEPASSDB")
     password = environ.get("KEEPASSDB_PASSWORD")
     if not all([db_path, password]):
@@ -113,6 +113,10 @@ def main(analyse, get=None, new_password=None, show_password=False):
                 print(f"Username: {entry.username}")
             if show_password:
                 print(f"Password: {entry.password}")
+            if show_details:
+                print(f"URL: {entry.url or ''}")
+                print(f"Notes: {entry.notes or ''}")
+
             if len(matching_entries) == 1:
                 pyperclip.copy(entry.password)
                 print(f"Password copied to clipboard")
@@ -161,6 +165,13 @@ if __name__ == "__main__":
     parser.add_argument("--get", "-g", type=str, help="Get entry by title or group/title")
     parser.add_argument("--update-password", "-u", type=str, help="Update password; use with -g to select an entry to update")
     parser.add_argument("--show-password", action="store_true")
+    parser.add_argument("--show-details", "-d", action="store_true")
 
     arguments = parser.parse_args()
-    main(arguments.analyse, get=arguments.get, new_password=arguments.update_password, show_password=arguments.show_password)
+    main(
+        arguments.analyse,
+        get=arguments.get,
+        new_password=arguments.update_password,
+        show_password=arguments.show_password,
+        show_details=arguments.show_details
+    )
