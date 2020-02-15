@@ -1,0 +1,2 @@
+attrs==19.3.0
+pykeepass==3.2.0
