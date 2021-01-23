@@ -1,6 +1,17 @@
 #!/usr/bin/env python3
+from pathlib import Path
 
 import attr
+
+
+@attr.s
+class KpConfig:
+    """
+    KeePass database config
+    """
+    path = attr.ib(type=Path)
+    password = attr.ib(type=str)
+
 
 @attr.s
 class KpEntry:
@@ -24,9 +35,6 @@ class KpEntry:
             url=entry_obj.url,
             notes=entry_obj.notes
         )
-
-    def as_tuple(self):
-        return self.title, self.username, self.password, self.group, self.url, self.notes
 
     @classmethod
     def from_tuple(cls, title, username, password, group, url, notes):
