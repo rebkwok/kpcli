@@ -11,7 +11,7 @@ from database_tools import KpDatabaseConnector
 logger = logging.getLogger(__name__)
 
 
-def main(compare=False, get=None, add=False, list_groups=False, new_password=None, show_password=False, show_details=False):
+def main(compare=False, get=None, add=False, list_groups=False, list_group_entries=False, new_password=None, show_password=False, show_details=False):
     missing_config = [var for var in ["KEEPASSDB", "KEEPASSDB_PASSWORD"] if environ.get(var) is None]
     if missing_config:
         logger.error("Missing environment variable(s): %s", ", ".join())
@@ -29,6 +29,10 @@ def main(compare=False, get=None, add=False, list_groups=False, new_password=Non
         if list_groups:
             group_names = "\n".join(connector.list_group_names())
             print(f"Groups:\n=======\n{group_names}")
+        if list_group_entries:
+            group = list_group_entries
+            entry_names = "\n".join(connector.list_group_entries(group))
+            print(f"Entries in group {group}:\n================================\n{entry_names}")
         if add:
             connector.add_new_entry()
 
@@ -65,6 +69,7 @@ if __name__ == "__main__":
     parser.add_argument("--update-password", "-u", type=str, help="Update password; use with -g to select an entry to update")
     parser.add_argument("--add", "-a", action="store_true", help="Add new entry; prompts for entry info")
     parser.add_argument("--list-groups", action="store_true", help="List all groups")
+    parser.add_argument("--list-group-entries", type=str, help="List all entries in specified group")
     parser.add_argument("--show-password", action="store_true")
     parser.add_argument("--show-details", "-d", action="store_true")
 
@@ -74,6 +79,7 @@ if __name__ == "__main__":
         add=arguments.add,
         get=arguments.get,
         list_groups=arguments.list_groups,
+        list_group_entries=arguments.list_group_entries,
         new_password=arguments.update_password,
         show_password=arguments.show_password,
         show_details=arguments.show_details

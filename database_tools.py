@@ -15,6 +15,10 @@ class KpDatabaseConnector:
     def list_group_names(self):
         return [group.name for group in self.db.groups]
 
+    def list_group_entries(self, group):
+        group = self.db.find_groups(name=group, regex=True, flags="i", first=True)
+        return [entry.title for entry in group.entries]
+
     def find_entries(self, search):
         if search is None:
             return []
