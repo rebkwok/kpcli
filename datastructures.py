@@ -3,6 +3,14 @@ from pathlib import Path
 
 import attr
 
+@attr.s
+class KpContext:
+    """
+    A holder object so we can pass things around in the typer Context
+    """
+    connector = attr.ib()
+    group = attr.ib
+
 
 @attr.s
 class KpConfig:
