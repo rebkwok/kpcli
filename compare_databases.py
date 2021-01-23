@@ -11,7 +11,7 @@ class KpDatabaseComparator:
 
     def __init__(self, db_config):
         self.config = db_config
-        self.db = PyKeePass(self.config.path, password=self.config.password)
+        self.db = PyKeePass(**db_config.asdict())
 
     def compare_tables(self, base_entries, comparison_db, show_conflicts=True):
         missing_in_comparison = []
@@ -33,8 +33,8 @@ class KpDatabaseComparator:
         return missing_in_comparison, conflicts
 
     def compare_for_conflicts(self):
-        db_name = self.config.path.stem
-        dbfiles = list(self.config.path.parent.glob(f"{db_name}*.kdbx"))
+        db_name = self.config.filename.stem
+        dbfiles = list(self.config.filename.parent.glob(f"{db_name}*.kdbx"))
         conflicts = len(dbfiles) > 1
         # find conflicting copies
         if conflicts:
@@ -47,7 +47,7 @@ class KpDatabaseComparator:
             main_db_entries = [KpEntry.parse(entry) for entry in self.db.entries]
             main_db_tuples = set(attr.astuple(entry) for entry in main_db_entries)
             conflicting_dbs = {
-                dbfile.name: PyKeePass(dbfile, password=self.config.password) for dbfile in dbfiles if dbfile != self.config.path
+                dbfile.name: PyKeePass(dbfile, password=self.config.password) for dbfile in dbfiles if dbfile != self.config.filename
             }
             for conflicting_db_name, conflicting_db in conflicting_dbs.items():
                 print(f"=========Comparing {conflicting_db_name}========")

@@ -16,9 +16,9 @@ def main(compare=False, get=None, add=False, list_groups=False, list_group_entri
     if missing_config:
         logger.error("Missing environment variable(s): %s", ", ".join())
         return
-    db_config = KpConfig(path=Path(environ["KEEPASSDB"]), password=environ["KEEPASSDB_PASSWORD"])
-    if not db_config.path.exists():
-        logger.error("Database file %s does not exist", db_config.path)
+    db_config = KpConfig(filename=Path(environ["KEEPASSDB"]), password=environ["KEEPASSDB_PASSWORD"], keyfile=environ.get("KEEPASSDB_KEYFILE"))
+    if not db_config.filename.exists():
+        logger.error("Database file %s does not exist", db_config.filename)
         return
 
     if compare:

@@ -10,7 +10,7 @@ INVALID_ATTRIBUTE = "<invalid>"
 class KpDatabaseConnector:
     
     def __init__(self, db_config):
-        self.db = PyKeePass(db_config.path, password=db_config.password)
+        self.db = PyKeePass(**db_config.asdict())
 
     def list_group_names(self):
         return [group.name for group in self.db.groups]

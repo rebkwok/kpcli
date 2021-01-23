@@ -9,9 +9,12 @@ class KpConfig:
     """
     KeePass database config
     """
-    path = attr.ib(type=Path)
+    filename = attr.ib(type=Path)
     password = attr.ib(type=str)
+    keyfile = attr.ib(type=str, default=attr.Factory(None))
 
+    def asdict(self):
+        return attr.asdict(self)
 
 @attr.s
 class KpEntry:
