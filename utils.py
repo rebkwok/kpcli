@@ -4,11 +4,10 @@ import configparser
 import logging
 from os import environ
 from pathlib import Path
-from typing import Optional
 
 import typer
 
-from datastructures import KpConfig
+from kpcli.datastructures import KpConfig
 
 logger = logging.getLogger(__name__)
 

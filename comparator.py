@@ -8,7 +8,7 @@ from pykeepass import PyKeePass
 import tableformatter
 from tableformatter import generate_table
 
-from datastructures import KpEntry
+from kpcli.datastructures import KpEntry
 
 
 class KpDatabaseComparator:

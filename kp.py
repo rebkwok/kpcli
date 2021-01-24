@@ -6,10 +6,10 @@ from typing import Optional
 # third parties
 import typer
 
-from comparator import KpDatabaseComparator
-from datastructures import CopyOption, KpContext
-from connector import KpDatabaseConnector
-from utils import echo_banner, get_config
+from kpcli.comparator import KpDatabaseComparator
+from kpcli.datastructures import CopyOption, KpContext
+from kpcli.connector import KpDatabaseConnector
+from kpcli.utils import echo_banner, get_config
 
 logger = logging.getLogger(__name__)
 app = typer.Typer()
@@ -170,7 +170,7 @@ def copy_entry_attribute(
     entry = get_or_prompt_single_entry(ctx, name)
     typer.echo(f"Entry: {entry.group.name}/{entry.title}")
     ctx_connector(ctx).copy_to_clipboard(entry, str(item))
-    typer.secho(f"{item} copied to clipboard", fg=typer.colors.GREEN)
+    typer.secho(f"{str(item)} copied to clipboard", fg=typer.colors.GREEN)
 
 
 @app.command()

@@ -6,7 +6,8 @@ import attr
 from pykeepass.group import Group
 from typing import Optional
 
-from connector import KpDatabaseConnector
+from kpcli.connector import KpDatabaseConnector
+
 
 @attr.s
 class KpContext:
