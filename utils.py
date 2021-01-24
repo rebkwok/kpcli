@@ -49,7 +49,6 @@ def get_config(profile="default"):
     return db_config
 
 
-def echo_banner(message: str, style: Optional[dict] = None):
-    banner = "=" * 50
-    style = style or {}
-    typer.secho(f"{banner}\n{message}\n{banner}", **style)
+def echo_banner(message: str, **style_options):
+    banner = "=" * 80
+    typer.secho(f"{banner}\n{message}\n{banner}", **style_options)

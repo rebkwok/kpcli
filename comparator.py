@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
+# standards
 import attr
+from typing import Set
+
+# third parties
 from pykeepass import PyKeePass
 import tableformatter
 from tableformatter import generate_table
@@ -8,63 +12,89 @@ from datastructures import KpEntry
 
 
 class KpDatabaseComparator:
+    """
+    Compares a main KeePassX database with potentially conflicting versions.
+    """
+    entry_fields = ["username", "password", "url", "group", "notes"]
 
     def __init__(self, db_config):
         self.config = db_config
         self.db = PyKeePass(**db_config.asdict())
 
-    def compare_tables(self, base_entries, comparison_db, show_conflicts=True):
-        missing_in_comparison = []
-        conflicts = []
-        for entry in base_entries:
-            group = comparison_db.find_groups(name=entry.group, first=True)
-            matching = comparison_db.find_entries(title=entry.title, group=group)
-            assert len(matching) <= 1
-            if not matching:
-                missing_in_comparison.append(entry)
-            elif show_conflicts:
-                matching = KpEntry.parse(matching[0])
-                mismatched = [
-                    attr for attr in ["username", "password", "url", "group", "notes"]
-                    if getattr(matching, attr) != getattr(entry, attr)
-                    ]
-                if mismatched:
-                    conflicts.append((entry, mismatched))
-        return missing_in_comparison, conflicts
+    def _get_matching_entry(self, db, entry):
+        """Find matching entry from specific database by entry group and title"""
+        group = db.find_groups(name=entry.group, first=True)
+        return db.find_entries(title=entry.title, group=group, first=True)
 
-    def compare_for_conflicts(self):
+    def compare_database_entries(self, differences: Set[tuple], comparison_db: PyKeePass, show_details: bool = False):
+        """
+        Take a set of entries-as-tuple that are known to differ in a comparison database and identify
+        which are missing, and which field have conflicts
+        """
+        missing_in_comparison = set()
+        missing_in_main = set()
+        conflicts = set()
+
+        def _format_conflict(conflict):
+            if show_details:
+                return f"{conflict[0]}: {conflict[1]} vs {conflict[2]}"
+            return conflict[0]
+
+        for entry in differences:
+            entry = KpEntry.from_tuple(*entry)
+            main = self._get_matching_entry(self.db, entry)
+            comparison = self._get_matching_entry(comparison_db, entry)
+            if main and comparison:
+                # find conflicts in the entry fields we care about
+                mismatched_items = []
+                for field in self.entry_fields:
+                    main_value = getattr(main, field)
+                    comparison_value = getattr(comparison, field)
+                    if main_value != comparison_value:
+                        mismatched_items.append((field, main_value, comparison_value))
+                conflicts.add(
+                    (f"{entry.group}/{entry.title}", ', '.join([_format_conflict(item) for item in mismatched_items]))
+                )
+
+            elif not comparison:
+                missing_in_comparison.add(f"{entry.group}/{entry.title}")
+            elif not main:
+                missing_in_main.add(f"{entry.group}/{entry.title}")
+        return missing_in_comparison, missing_in_main, conflicts
+
+    def generate_tables_of_conflicts(self, show_details=False):
+        """
+        Find databases with the same filepath stem as the main database and compare them for missing and
+        conflicting entries.
+        Returns a dict of tabulated results for each conflicting database found.
+        """
         db_name = self.config.filename.stem
-        dbfiles = list(self.config.filename.parent.glob(f"{db_name}*.kdbx"))
-        conflicts = len(dbfiles) > 1
         # find conflicting copies
-        if conflicts:
-            dbfilenames = "\n".join(dbfile.name for dbfile in dbfiles)
-            print(f"Conflicting files found:\n{dbfilenames}")
-        else:
-            print(f"No conflicting files for {dbfiles[0].name}")
+        comparison_db_files = set(self.config.filename.parent.glob(f"{db_name}*.kdbx")) - {self.config.filename}
+        if not comparison_db_files:
+            return
 
-        if conflicts:
-            main_db_entries = [KpEntry.parse(entry) for entry in self.db.entries]
-            main_db_tuples = set(attr.astuple(entry) for entry in main_db_entries)
-            conflicting_dbs = {
-                dbfile.name: PyKeePass(dbfile, password=self.config.password) for dbfile in dbfiles if dbfile != self.config.filename
-            }
-            for conflicting_db_name, conflicting_db in conflicting_dbs.items():
-                print(f"=========Comparing {conflicting_db_name}========")
-                conflicting_db_entries = [KpEntry.parse(entry) for entry in conflicting_db.entries]
-                conflicting_db_tuples = set(attr.astuple(entry) for entry in conflicting_db_entries)
-
-                in_main = main_db_tuples - conflicting_db_tuples
-                in_main_entries = [KpEntry.from_tuple(*entry_tuple) for entry_tuple in in_main]
-                in_conflicting = conflicting_db_tuples - main_db_tuples
-                in_conflicting_entries = [KpEntry.from_tuple(*entry_tuple) for entry_tuple in in_conflicting]
-
-                missing_in_comparison, _ = self.compare_tables(in_main_entries, conflicting_db, show_conflicts=False)
-                missing_in_main, conflicts = self.compare_tables(in_conflicting_entries, self.db)
-                column_headers = ["Main", "Comparison", "Conflicting fields"]
+        conflicting_tables = {}
+        main_entries = set(attr.astuple(KpEntry.parse(entry)) for entry in self.db.entries)
+        for comparison_db_file in comparison_db_files:
+            comparison_db = PyKeePass(comparison_db_file, password=self.config.password)
+            comparison_entries = set(attr.astuple(KpEntry.parse(entry)) for entry in comparison_db.entries)
+            # Find the entries that are not identical in the comparison db.
+            differing_entries = main_entries ^ comparison_entries
+            # Identify the differences
+            missing_in_comparison, missing_in_main, conflicts = self.compare_database_entries(
+                differing_entries, comparison_db, show_details=show_details
+            )
+            # Build a table of conflicts
+            if not any([missing_in_comparison, missing_in_main, conflicts]):
+                conflicting_tables[str(comparison_db.filename)] = "No conflicts found"
+            else:
+                column_headers = ["Main", "Conflicting", "Conflicting fields"]
                 rows = [
-                    *[(f"{entry.group}/{entry.title}", "-", "") for entry in missing_in_comparison],
-                    *[("-", f"{entry.group}/{entry.title}", "") for entry in missing_in_main],
-                    *[(f"{entry.group}/{entry.title}", f"{entry.group}/{entry.title}", ",".join(attributes)) for entry, attributes in conflicts]
+                    *[(entry_name, "-", "") for entry_name in missing_in_comparison],
+                    *[("-", entry_name, "") for entry_name in missing_in_main],
+                    *[(entry_name, entry_name, conflicting_fields) for entry_name, conflicting_fields in conflicts]
                 ]
-                print(generate_table(rows, column_headers, grid_style=tableformatter.FancyGrid()))
+                conflicting_tables[str(comparison_db.filename)] = generate_table(rows, column_headers, grid_style=tableformatter.FancyGrid())
+        return conflicting_tables
+

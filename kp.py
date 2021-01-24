@@ -14,8 +14,6 @@ from utils import echo_banner, get_config
 logger = logging.getLogger(__name__)
 app = typer.Typer()
 
-COPY_OPTIONS = ["username", "password", "url"]
-
 
 # VALIDATORS
 def validate_group(ctx: typer.Context, group_name):
@@ -52,12 +50,19 @@ def validate_selection_number(option_count):
 
 
 @app.command()
-def compare(ctx: typer.Context):
+def compare(ctx: typer.Context, show_details: bool = False):
     """
+    If a KeePassX database is opened and modified from multiple locations, KeePassX will create a duplicate
+    with the suffix `_conflicting_copy`
     Compare potentially conflicting copies of a KeePassX Database and report conflicts
     """
     typer.echo("Looking for conflicting files...")
-    ctx.obj.compare_for_conflicts()
+    conflicting_tables = ctx.obj.generate_tables_of_conflicts(show_details=show_details)
+    if conflicting_tables is None:
+        typer.echo("No conflicting tables found")
+    for conflicting_table_name, conflicting_table in conflicting_tables.items():
+        echo_banner(f"Comparison db: {conflicting_table_name}", fg=typer.colors.RED)
+        typer.echo(conflicting_table)
 
 
 def ctx_connector(ctx: typer.Context):
@@ -83,11 +88,11 @@ def list_groups_and_entries(
     if entries:
         for group_name in group_names:
             entry_names = "\n".join(ctx_connector(ctx).list_group_entries(group_name))
-            echo_banner(f"{group_name}", style={"fg": typer.colors.GREEN})
+            echo_banner(f"{group_name}", fg= typer.colors.GREEN)
             typer.echo(entry_names)
     else:
         group_names = "\n".join(group_names)
-        echo_banner("Groups", style={"fg": typer.colors.GREEN})
+        echo_banner("Groups", fg= typer.colors.GREEN)
         typer.echo(group_names)
 
 
