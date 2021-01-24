@@ -1,5 +1,6 @@
 attrs==20.3.0
 pykeepass==3.2.1
 pyperclip==1.8.1
+pytest==6.2.1
 tableformatter==0.1.5
 typer[all]==0.3.2
