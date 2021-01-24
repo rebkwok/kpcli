@@ -19,23 +19,24 @@ class KpDatabaseConnector:
         group = self.db.find_groups(name=group, regex=True, flags="i", first=True)
         return [entry.title for entry in group.entries]
 
-    def find_entries(self, search):
-        if search is None:
+    def find_entries(self, query, group=None):
+        if query is None:
             return []
-        search = search.split("/")
-        if len(search) > 1:
-            group, title = search
+        if group is None:
+            query = query.split("/")
+            if len(query) > 1:
+                group, query = query
+            else:
+                query = query[0]
             group = self.db.find_groups(name=group, regex=True, flags="i", first=True)
-            return self.db.find_entries(title=title, group=group, regex=True, flags="i")
+
+        if group:
+            return self.db.find_entries(title=query, group=group, regex=True, flags="i")
         else:
-            title = search[0]
-            return self.db.find_entries(title=title, regex=True, flags="i")
+            return self.db.find_entries(title=query, regex=True, flags="i")
 
     def find_group(self, group_name):
         return self.db.find_groups(name=group_name, regex=True, flags="i", first=True)
-
-    def find_entries_by_title(self, title, group):
-        return self.db.find_entries(title=title, group=group, recursive=False, regex=True, flags="i")
 
     def add_new_entry(self, group, title, username, password, url, notes):
         self.db.add_entry(group, title, username, password, url=url, notes=notes)

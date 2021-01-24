@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
+from enum import Enum
 from pathlib import Path
 
 import attr
+from pykeepass.group import Group
+from typing import Optional
+
+from connector import KpDatabaseConnector
 
 @attr.s
 class KpContext:
     """
     A holder object so we can pass things around in the typer Context
     """
-    connector = attr.ib()
-    group = attr.ib
+    connector = attr.ib(type=KpDatabaseConnector)
+    group = attr.ib(type=Optional[Group], default=None)
 
 
 @attr.s
@@ -19,7 +24,7 @@ class KpConfig:
     """
     filename = attr.ib(type=Path)
     password = attr.ib(type=str)
-    keyfile = attr.ib(type=str, default=attr.Factory(None))
+    keyfile = attr.ib(type=Optional[str], default=None)
 
     def asdict(self):
         return attr.asdict(self)
@@ -57,3 +62,18 @@ class KpEntry:
             url=url,
             notes=notes
         )
+
+
+class CopyOption(str, Enum):
+    username = "username"
+    u = "u"
+    password = "password"
+    p = "p"
+    url = "url"
+
+    def __str__(self):
+        if self.value == "u":
+            return "username"
+        elif self.value == "p":
+            return "password"
+        return self.value
