@@ -130,7 +130,9 @@ def get_entry(
         typer.echo("No matching entry found")
         raise typer.Exit()
     for entry in entries:
-        ctx_connector(ctx).get_details(entry, show_password)
+        details = ctx_connector(ctx).get_details(entry, show_password)
+        echo_banner(details["name"])
+        typer.echo("\n".join([f"{field}: {value}" for field, value in details.items()]))
 
 
 def get_or_prompt_single_entry(ctx: typer.Context, name):
@@ -168,6 +170,7 @@ def copy_entry_attribute(
     entry = get_or_prompt_single_entry(ctx, name)
     typer.echo(f"Entry: {entry.group.name}/{entry.title}")
     ctx_connector(ctx).copy_to_clipboard(entry, str(item))
+    typer.secho(f"{item} copied to clipboard", fg=typer.colors.GREEN)
 
 
 @app.command()
@@ -182,6 +185,7 @@ def change_password(
     entry = get_or_prompt_single_entry(ctx, name)
     typer.echo(f"Entry: {entry.group.name}/{entry.title}")
     ctx_connector(ctx).change_password(entry, password)
+    typer.secho(f"{entry.group.name}/{entry.title}: password updated", fg=typer.colors.GREEN)
 
 
 @app.callback()
@@ -196,7 +200,7 @@ def main(
     Set the required config variables KEEPASSDB, KEEPASSDB_PASSWORD and (if the database requires it)
     KEEPASSDB_KEYFILE, either as environment variables or in a configuration file located at $(HOME)/.kp/config.ini
 
-    Set additional profiles in config.ini to use different databases
+    Set additional profiles in config.ini to allow switching between different databases
     """
     logging.basicConfig(level=loglevel.upper())
 
