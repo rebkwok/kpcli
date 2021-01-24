@@ -65,36 +65,34 @@ def ctx_connector(ctx: typer.Context):
     return ctx.obj.connector
 
 
-@app.command()
-def list_groups(
+@app.command("ls")
+def list_groups_and_entries(
     ctx: typer.Context,
-    entries: bool = typer.Option(False, "--entries", "-e", help="Include entries for groups.")
+    group_name: Optional[str] = typer.Option(None, "--group", "-g", help="Group name (partial allowed)"),
+    entries: bool = typer.Option(False, "--entries", "-e", help="Also list entries")
 ):
     """
-    List all group names
+    List groups and entries
     """
-    group_names = ctx_connector(ctx).list_group_names()
+    if group_name:
+        group = ctx_connector(ctx).find_group(group_name)
+        group_names = [group.name]
+    else:
+        group_names = ctx_connector(ctx).list_group_names()
+
     if entries:
         for group_name in group_names:
-            list_entries(ctx, group_name)
+            entry_names = "\n".join(ctx_connector(ctx).list_group_entries(group_name))
+            echo_banner(f"{group_name}", style={"fg": typer.colors.GREEN})
+            typer.echo(entry_names)
     else:
         group_names = "\n".join(group_names)
-        echo_banner("Groups")
+        echo_banner("Groups", style={"fg": typer.colors.GREEN})
         typer.echo(group_names)
 
 
-@app.command()
-def list_entries(ctx: typer.Context, group_name: str = typer.Argument(..., help="Group name (partial allowed)")):
-    """
-    List all entries in a single group
-    """
-    entry_names = "\n".join(ctx_connector(ctx).list_group_entries(group_name))
-    echo_banner(f"{group_name}")
-    typer.echo(entry_names)
-
-
-@app.command()
-def add(
+@app.command("add")
+def add_entry(
         ctx: typer.Context,
         group: str = typer.Option("root", prompt="Group name (partial matches allowed)", callback=validate_group),
         title: str = typer.Option(..., prompt=True, callback=validate_title),
@@ -113,8 +111,8 @@ def add(
     )
 
 
-@app.command()
-def get(
+@app.command("get")
+def get_entry(
         ctx: typer.Context,
         name: str = typer.Argument(..., help="Name (or partial name) of item to fetch.  Specify group with / e.g. root/my_item"),
         show_password: bool = typer.Option(False, "--show-password", "-s", help="Show password"),
@@ -153,8 +151,8 @@ def get_or_prompt_single_entry(ctx: typer.Context, name):
         return entries[0]
 
 
-@app.command()
-def copy(
+@app.command("cp")
+def copy_entry_attribute(
         ctx: typer.Context,
         name: str = typer.Argument(..., help="group/title (or part thereof) of entry"),
         item: CopyOption = typer.Argument(CopyOption.password, help="Attribute to copy")

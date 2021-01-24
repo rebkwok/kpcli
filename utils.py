@@ -4,6 +4,8 @@ import configparser
 import logging
 from os import environ
 from pathlib import Path
+from typing import Optional
+
 import typer
 
 from datastructures import KpConfig
@@ -47,6 +49,7 @@ def get_config(profile="default"):
     return db_config
 
 
-def echo_banner(message):
+def echo_banner(message: str, style: Optional[dict] = None):
     banner = "=" * 50
-    typer.echo(f"{banner}\n{message}\n{banner}")
+    style = style or {}
+    typer.secho(f"{banner}\n{message}\n{banner}", **style)
