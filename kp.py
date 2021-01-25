@@ -58,7 +58,7 @@ def compare(ctx: typer.Context, show_details: bool = False):
     """
     typer.echo("Looking for conflicting files...")
     conflicting_tables = ctx.obj.generate_tables_of_conflicts(show_details=show_details)
-    if conflicting_tables is None:
+    if not conflicting_tables:
         typer.echo("No conflicting tables found")
     for conflicting_table_name, conflicting_table in conflicting_tables.items():
         echo_banner(f"Comparison db: {conflicting_table_name}", fg=typer.colors.RED)
