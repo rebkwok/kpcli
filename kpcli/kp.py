@@ -52,9 +52,10 @@ def validate_selection_number(option_count):
 @app.command()
 def compare(ctx: typer.Context, show_details: bool = False):
     """
+    Compare potentially conflicting copies of a KeePassX Database and report conflicts
+
     If a KeePassX database is opened and modified from multiple locations, KeePassX will create a duplicate
     with the suffix `_conflicting_copy`
-    Compare potentially conflicting copies of a KeePassX Database and report conflicts
     """
     typer.echo("Looking for conflicting files...")
     conflicting_tables = ctx.obj.generate_tables_of_conflicts(show_details=show_details)
