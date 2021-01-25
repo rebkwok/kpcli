@@ -2,8 +2,8 @@
 import pytest
 import pyperclip
 
-from ..connector import KpDatabaseConnector
-from ..datastructures import KpConfig
+from kpcli.connector import KpDatabaseConnector
+from kpcli.datastructures import KpConfig
 
 
 def test_list_all_groups(test_db_path):

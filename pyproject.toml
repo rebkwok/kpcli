@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "kpcli"
+version = "0.1.0"
+description = "A simple command line tool to interact with KeePassX databases"
+authors = ["Becky Smith <rebkwok@gmail.com>"]
+license = "GPL-3.0-or-later"
+readme = "README.md"
+
+[tool.poetry.scripts]
+kpcli = "kpcli.kp:app"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+typer = {version = "^0.3.2", extras = ["all"]}
+pykeepass = "^3.2.1"
+pyperclip = "^1.8.1"
+tableformatter = "^0.1.5"
+attrs = "^20.3.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.1"
+pytest-cov = "^2.11.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

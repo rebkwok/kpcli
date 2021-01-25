@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from typer.testing import CliRunner
 
-from ..kp import app
+from kpcli.kp import app
 
 runner = CliRunner()
 

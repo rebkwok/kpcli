@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from ..comparator import KpDatabaseComparator
-from ..datastructures import KpConfig
+from kpcli.comparator import KpDatabaseComparator
+from kpcli.datastructures import KpConfig
 
 
 def test_compare_no_conflicts(test_db_path):
