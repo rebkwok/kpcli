@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pyperclip
+import pytest
 from typer.testing import CliRunner
 
 from kpcli.kp import app
@@ -76,18 +77,19 @@ def test_get_with_password():
     assert "********" not in result.stdout
 
 
+@pytest.mark.skipif(environ.get("CI", "0") == "1", reason="skip if running as github action")
 @patch.dict(environ, get_env_vars("test_db"))
 def test_copy():
     # copies password by default
-    result = runner.invoke(app, ["cp", "gmail"])
+    runner.invoke(app, ["cp", "gmail"])
     assert pyperclip.paste() == "testpass"
 
     # copy username
-    result = runner.invoke(app, ["cp", "gmail", "username"])
+    runner.invoke(app, ["cp", "gmail", "username"])
     assert pyperclip.paste() == "test@test.com"
 
     # copy username with abbreviation
-    result = runner.invoke(app, ["cp", "gmail", "u"])
+    runner.invoke(app, ["cp", "gmail", "u"])
     assert pyperclip.paste() == "test@test.com"
 
 

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from os import environ
+
 import pytest
 import pyperclip
 
@@ -62,6 +64,7 @@ def test_get_details(test_db_path, show_password, password):
     }
 
 
+@pytest.mark.skipif(environ.get("CI", "0") == "1", reason="skip if running as github action")
 @pytest.mark.parametrize(
     "attribute,expected",
     [("username", "test@test.com"), ("password", "testpass"), ("url", "gmail.com")],
