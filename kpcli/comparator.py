@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Compares two or more KeePassX databases for conflicting entries"""
+
 # standards
 import attr
 from typing import Set
@@ -41,8 +43,8 @@ class KpDatabaseComparator:
                 return f"{conflict[0]}: {conflict[1]} vs {conflict[2]}"
             return conflict[0]
 
-        for entry in differences:
-            entry = KpEntry.from_tuple(*entry)
+        for entry_tuple in differences:
+            entry = KpEntry.from_tuple(*entry_tuple)
             main = self._get_matching_entry(self.db, entry)
             comparison = self._get_matching_entry(comparison_db, entry)
             if main and comparison:
@@ -56,7 +58,6 @@ class KpDatabaseComparator:
                 conflicts.add(
                     (f"{entry.group}/{entry.title}", ', '.join([_format_conflict(item) for item in mismatched_items]))
                 )
-
             elif not comparison:
                 missing_in_comparison.add(f"{entry.group}/{entry.title}")
             elif not main:
@@ -64,6 +65,24 @@ class KpDatabaseComparator:
         return missing_in_comparison, missing_in_main, conflicts
 
     def get_conflicting_data(self, show_details=False):
+        """
+        Find databases with the same filepath stem as the main database and compares them for missing and
+        conflicting entries.
+        Returns a dict of database filenames and their conflicts with the main database as a tuple of
+        (
+            {entries present in main, missing in comparison db},
+            {entries present in comparison, missing in main db},
+            {conflicting entries}
+        )
+        e.g
+        (
+            {"group1/title1"},
+            {"group1/title2", "group2/title3"},
+            {
+                ("group3/title3", "username"),
+                ("group4/title4", "password")
+        )
+        """
         db_name = self.config.filename.stem
         # find conflicting copies
         comparison_db_files = set(self.config.filename.parent.glob(f"{db_name}*.kdbx")) - {self.config.filename}
@@ -91,7 +110,7 @@ class KpDatabaseComparator:
         """
         Find databases with the same filepath stem as the main database and compare them for missing and
         conflicting entries.
-        Returns a dict of tabulated results for each conflicting database found.
+        Returns a dict of tabulated results for each conflicting database found which can be passed to `print` or `typer.echo`.
         """
         conflicting_tables = {}
         for comparison_db_filename, data in self.get_conflicting_data(show_details).items():

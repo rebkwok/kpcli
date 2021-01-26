@@ -19,6 +19,10 @@ def _get_config_var(var, config_dict):
 
 
 def get_config(profile="default"):
+    """
+    Find database config from a config.ini file or relevant environment variables
+    returns a KPConfig instance
+    """
     config_file = Path(environ["HOME"]) / ".kp" / "config.ini"
     if config_file.exists():
         config = configparser.ConfigParser()
@@ -49,5 +53,6 @@ def get_config(profile="default"):
 
 
 def echo_banner(message: str, **style_options):
+    """Helper function to print a banner style message"""
     banner = "=" * 80
     typer.secho(f"{banner}\n{message}\n{banner}", **style_options)

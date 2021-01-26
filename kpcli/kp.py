@@ -16,8 +16,12 @@ logger = logging.getLogger(__name__)
 app = typer.Typer()
 
 
+############
 # VALIDATORS
+############
+
 def validate_group(ctx: typer.Context, group_name):
+    """Find the first group matching group_name"""
     group = ctx_connector(ctx).find_group(group_name)
     if group is None:
         typer.echo(f"No group matching '{group_name}' found")
@@ -28,6 +32,10 @@ def validate_group(ctx: typer.Context, group_name):
 
 
 def validate_title(ctx: typer.Context, title):
+    """
+    Validate title when adding a new entry and abort if an entry already exists with the requested title
+    """
+    # group should already be set, either at the command line or from a prompt
     group = ctx.obj.group
     if group is None:
         # group may be None if a user specified --title at the command line
@@ -42,6 +50,9 @@ def validate_title(ctx: typer.Context, title):
 
 
 def validate_selection_number(option_count):
+    """
+    Validate a selection prompt from the user and ensure it is one of the valid options
+    """
     selection = typer.prompt(f"Select entry number")
     try:
         selection = int(selection)
@@ -195,7 +206,7 @@ def main(
         ctx: typer.Context,
         profile: Optional[str] = typer.Option("default", "--profile", "-p", help="Specify config profile to use"),
         loglevel: Optional[str] = typer.Option("INFO")
-    ):
+):
     """
     Interact with a KeePassX database
 

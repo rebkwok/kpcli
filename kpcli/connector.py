@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Connect to and interact with a KeePassX database."""
+
 import attr
 from pykeepass import PyKeePass
 import pyperclip
@@ -13,13 +15,20 @@ class KpDatabaseConnector:
         self.db = PyKeePass(*attr.astuple(db_config))
 
     def list_group_names(self):
+        """Fetch names of all groups"""
         return [group.name for group in self.db.groups]
 
     def list_group_entries(self, group_name):
+        """Fetch names of all entries in a single group"""
         group = self.find_group(group_name=group_name)
         return [entry.title for entry in group.entries]
 
     def find_entries(self, query, group=None):
+        """
+        Fetch entries from a query string, formatted optionally as <group>/<entry title>.
+        Both <group> and <entry title> are case insensitive and can be partial terms.
+        If a group is provided, entries will only be looked for in that group.
+        """
         if query is None:
             return []
         if group is None:
@@ -41,20 +50,24 @@ class KpDatabaseConnector:
         return self.db.find_groups(name=group_name, regex=True, flags="i", first=True)
 
     def add_new_entry(self, group, title, username, password, url, notes):
+        """Add a new entry"""
         self.db.add_entry(group, title, username, password, url=url, notes=notes)
         self.db.save()
 
     def change_password(self, entry, new_password):
+        """Change an entry's password"""
         entry.password = new_password
         self.db.save()
 
     def copy_to_clipboard(self, entry, item):
+        """Copy the requested item to the clipboard"""
         try:
             pyperclip.copy(getattr(entry, item))
         except AttributeError:
             raise AttributeError(f"Entry has no attribute {item}")
 
     def get_details(self, entry, show_password=False):
+        """Retrieve details for a single entry"""
         return {
             "name": f"{entry.group.name}/{entry.title}",
             "username": entry.username,
