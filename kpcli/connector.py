@@ -4,9 +4,6 @@ from pykeepass import PyKeePass
 import pyperclip
 
 
-INVALID_ATTRIBUTE = "<invalid>"
-
-
 class KpDatabaseConnector:
     """
     Connects to and interacts with a KeePassX database.
@@ -52,10 +49,10 @@ class KpDatabaseConnector:
         self.db.save()
 
     def copy_to_clipboard(self, entry, item):
-        value = getattr(entry, item, INVALID_ATTRIBUTE)
-        if value == INVALID_ATTRIBUTE:
+        try:
+            pyperclip.copy(getattr(entry, item))
+        except AttributeError:
             raise AttributeError(f"Entry has no attribute {item}")
-        pyperclip.copy(value)
 
     def get_details(self, entry, show_password=False):
         return {
