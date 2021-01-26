@@ -4,7 +4,7 @@ from pathlib import Path
 
 import attr
 from pykeepass.group import Group
-from typing import Optional
+from typing import Optional, NamedTuple
 
 from kpcli.connector import KpDatabaseConnector
 
@@ -18,17 +18,14 @@ class KpContext:
     group = attr.ib(type=Optional[Group], default=None)
 
 
-@attr.s
-class KpConfig:
+class KpConfig(NamedTuple):
     """
     KeePass database config
     """
-    filename = attr.ib(type=Path)
-    password = attr.ib(type=str)
-    keyfile = attr.ib(type=Optional[str], default=None)
+    filename: Path
+    password: str
+    keyfile: Optional[str] = None
 
-    def asdict(self):
-        return attr.asdict(self)
 
 @attr.s
 class KpEntry:

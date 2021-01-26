@@ -12,7 +12,7 @@ class KpDatabaseConnector:
     """
 
     def __init__(self, db_config):
-        self.db = PyKeePass(**db_config.asdict())
+        self.db = PyKeePass(*db_config)
 
     def list_group_names(self):
         return [group.name for group in self.db.groups]

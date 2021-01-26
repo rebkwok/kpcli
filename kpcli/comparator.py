@@ -20,7 +20,7 @@ class KpDatabaseComparator:
 
     def __init__(self, db_config):
         self.config = db_config
-        self.db = PyKeePass(**db_config.asdict())
+        self.db = PyKeePass(*db_config)
 
     def _get_matching_entry(self, db, entry):
         """Find matching entry from specific database by entry group and title"""
