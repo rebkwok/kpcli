@@ -41,7 +41,7 @@ class KpEntry:
     notes = attr.ib(type=str)
 
     @classmethod
-    def parse(cls, entry_obj):
+    def from_pykeepass_entry(cls, entry_obj):
         return cls(
             title=entry_obj.title,
             username=entry_obj.username,

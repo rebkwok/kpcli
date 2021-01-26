@@ -68,7 +68,7 @@ class KpDatabaseComparator:
         # find conflicting copies
         comparison_db_files = set(self.config.filename.parent.glob(f"{db_name}*.kdbx")) - {self.config.filename}
         conflicting_data = {}
-        main_entries = set(attr.astuple(KpEntry.parse(entry)) for entry in self.db.entries)
+        main_entries = set(attr.astuple(KpEntry.from_pykeepass_entry(entry)) for entry in self.db.entries)
         for comparison_db_file in comparison_db_files:
             try:
                 comparison_db = PyKeePass(comparison_db_file, password=self.config.password)
@@ -77,7 +77,7 @@ class KpDatabaseComparator:
                 # may exist. In that case, just report None
                 conflicting_entries = None
             else:
-                comparison_entries = set(attr.astuple(KpEntry.parse(entry)) for entry in comparison_db.entries)
+                comparison_entries = set(attr.astuple(KpEntry.from_pykeepass_entry(entry)) for entry in comparison_db.entries)
                 # Find the entries that are not identical in the comparison db.
                 differing_entries = main_entries ^ comparison_entries
                 # Identify the differences
