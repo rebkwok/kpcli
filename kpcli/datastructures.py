@@ -18,13 +18,14 @@ class KpContext:
     group = attr.ib(type=Optional[Group], default=None)
 
 
-class KpConfig(NamedTuple):
+@attr.s
+class KpConfig:
     """
     KeePass database config
     """
-    filename: Path
-    password: str
-    keyfile: Optional[str] = None
+    filename = attr.ib(type=Path)
+    password = attr.ib(type=Optional[str], default=None)
+    keyfile = attr.ib(type=Optional[str], default=None)
 
 
 @attr.s

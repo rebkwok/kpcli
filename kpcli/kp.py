@@ -179,14 +179,14 @@ def copy_entry_attribute(
 def change_password(
     ctx: typer.Context,
     name: str = typer.Argument(..., help="group/title (or part thereof) of entry to fetch"),
-    password: str = typer.Option(..., "--password", "-p", prompt="New password", hide_input=True),
+    new_password: str = typer.Option(..., "--password", prompt="New password", hide_input=True),
 ):
     """
     Change entry password
     """
     entry = get_or_prompt_single_entry(ctx, name)
     typer.echo(f"Entry: {entry.group.name}/{entry.title}")
-    ctx_connector(ctx).change_password(entry, password)
+    ctx_connector(ctx).change_password(entry, new_password)
     typer.secho(f"{entry.group.name}/{entry.title}: password updated", fg=typer.colors.GREEN)
 
 
@@ -199,8 +199,8 @@ def main(
     """
     Interact with a KeePassX database
 
-    Set the required config variables KEEPASSDB, KEEPASSDB_PASSWORD and (if the database requires it)
-    KEEPASSDB_KEYFILE, either as environment variables or in a configuration file located at $(HOME)/.kp/config.ini
+    Set the required config variable KEEPASSDB and (if the database requires it) KEEPASSDB_KEYFILE,
+    either as environment variables or in a configuration file located at $(HOME)/.kp/config.ini
 
     Set additional profiles in config.ini to allow switching between different databases
     """
@@ -208,6 +208,10 @@ def main(
 
     # Instantiate the relevant database utility object on the Context
     config = get_config(profile=profile)
+    if config.password is None:
+        # If a password wasn't found in the config file or environment, prompt the use for it
+        config.password = typer.prompt("Database password", hide_input=True)
+
     try:
         if ctx.invoked_subcommand == "compare":
             ctx.obj = KpDatabaseComparator(config)

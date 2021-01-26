@@ -33,6 +33,11 @@ poetry install
 **kpcli** will look for database configuration first in a config.ini file, and if 
 one is not found, in environment variables.
 
+**NOTE:** 
+AT YOUR OWN RISK! `KEEPASSDB_PASSWORD` can be set in the config.ini file or as an environment variable if you really want to.
+Not advised unless you implement some method of encrypting and retrieving it before passing to **kpcli**.  If no `KEEPASSDB_PASSWORD`
+is found, **kpcli** will prompt for it.
+
 ### Config file 
 
 Create a config file at $(HOME)/.kp/config.ini, with at least a default profile, and your
@@ -40,14 +45,12 @@ database location and credentials:
 ```
 [default]
 KEEPASSDB=/Users/me/mypassworddb.kdbx
-KEEPASSDB_PASSWORD=my-password
 ```
 
 If your database uses a key file, provide that location too:
 ```
 [default]
 KEEPASSDB=/path/to/mypassworddb.kdbx
-KEEPASSDB_PASSWORD=my-password
 KEYPASSDB_KEYFILE=/path/to/mykeyfile.key
 ```
 
@@ -55,17 +58,15 @@ More than one profile can be set for multiple databases, and switched with the `
 ```
 [default]
 KEEPASSDB=/path/to/db.kdbx
-KEEPASSDB_PASSWORD=my-password
 KEYPASSDB_KEYFILE=/path/to/mykeyfile.key
 
 [work]
 KEEPASSDB=/path/to/workdb.kdbx
-KEEPASSDB_PASSWORD=my-work-password
 ```
 
 ### Environment Variables
 If no config.ini file exists, **kpcli** will attempt to find config in the environment variables 
-`KEEPASSDB`, `KEEPASSDB_PASSWORD` and `KEYPASSDB_KEYFILE`.
+`KEEPASSDB`, `KEYPASSDB_KEYFILE` and `KEEPASSDB_PASSWORD` (falling back to a prompt for the password).
 
 
 ### Usage Examples ###

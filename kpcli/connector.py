@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import attr
 from pykeepass import PyKeePass
 import pyperclip
 
@@ -12,7 +13,7 @@ class KpDatabaseConnector:
     """
 
     def __init__(self, db_config):
-        self.db = PyKeePass(*db_config)
+        self.db = PyKeePass(*attr.astuple(db_config))
 
     def list_group_names(self):
         return [group.name for group in self.db.groups]

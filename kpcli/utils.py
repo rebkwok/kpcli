@@ -11,7 +11,7 @@ from kpcli.datastructures import KpConfig
 
 logger = logging.getLogger(__name__)
 
-REQUIRED_CONFIG = ["KEEPASSDB", "KEEPASSDB_PASSWORD"]
+REQUIRED_CONFIG = ["KEEPASSDB"]
 
 
 def _get_config_var(var, config_dict):
