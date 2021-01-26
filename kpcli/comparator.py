@@ -5,6 +5,7 @@ from typing import Set
 
 # third parties
 from pykeepass import PyKeePass
+from pykeepass.exceptions import CredentialsError
 import tableformatter
 from tableformatter import generate_table
 
@@ -69,15 +70,21 @@ class KpDatabaseComparator:
         conflicting_data = {}
         main_entries = set(attr.astuple(KpEntry.parse(entry)) for entry in self.db.entries)
         for comparison_db_file in comparison_db_files:
-            comparison_db = PyKeePass(comparison_db_file, password=self.config.password)
-            comparison_entries = set(attr.astuple(KpEntry.parse(entry)) for entry in comparison_db.entries)
-            # Find the entries that are not identical in the comparison db.
-            differing_entries = main_entries ^ comparison_entries
-            # Identify the differences
-            conflicting_entries = self.compare_database_entries(
-                differing_entries, comparison_db, show_details=show_details
-            )
-            conflicting_data[str(comparison_db.filename)] = conflicting_entries
+            try:
+                comparison_db = PyKeePass(comparison_db_file, password=self.config.password)
+            except CredentialsError:
+                # Conflicting copies will have the same credentials as the original, but another db with the same stem
+                # may exist. In that case, just report None
+                conflicting_entries = None
+            else:
+                comparison_entries = set(attr.astuple(KpEntry.parse(entry)) for entry in comparison_db.entries)
+                # Find the entries that are not identical in the comparison db.
+                differing_entries = main_entries ^ comparison_entries
+                # Identify the differences
+                conflicting_entries = self.compare_database_entries(
+                    differing_entries, comparison_db, show_details=show_details
+                )
+            conflicting_data[str(comparison_db_file)] = conflicting_entries
         return conflicting_data
 
     def generate_tables_of_conflicts(self, show_details=False):
@@ -88,6 +95,9 @@ class KpDatabaseComparator:
         """
         conflicting_tables = {}
         for comparison_db_filename, data in self.get_conflicting_data(show_details).items():
+            if data is None:
+                conflicting_tables[comparison_db_filename] = "Database could not be accessed"
+                continue
             missing_in_comparison, missing_in_main, conflicts = data
             # Build a table of conflicts
             if not any([missing_in_comparison, missing_in_main, conflicts]):

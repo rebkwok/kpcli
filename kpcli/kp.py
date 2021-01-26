@@ -4,6 +4,7 @@ import logging
 from typing import Optional
 
 # third parties
+from pykeepass.exceptions import CredentialsError
 import typer
 
 from kpcli.comparator import KpDatabaseComparator
@@ -206,10 +207,15 @@ def main(
     logging.basicConfig(level=loglevel.upper())
 
     # Instantiate the relevant database utility object on the Context
-    if ctx.invoked_subcommand == "compare":
-        ctx.obj = KpDatabaseComparator(get_config(profile=profile))
-    else:
-        ctx.obj = KpContext(connector=KpDatabaseConnector(get_config(profile=profile)))
+    config = get_config(profile=profile)
+    try:
+        if ctx.invoked_subcommand == "compare":
+            ctx.obj = KpDatabaseComparator(config)
+        else:
+            ctx.obj = KpContext(connector=KpDatabaseConnector(config))
+    except CredentialsError:
+        typer.secho(f"Invalid credentials for database {config.filename}", fg=typer.colors.RED)
+        raise typer.Exit(1)
 
 
 if __name__ == "__main__":

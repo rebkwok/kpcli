@@ -5,7 +5,7 @@ from kpcli.datastructures import KpConfig
 
 
 def test_compare_no_conflicts(test_db_path):
-    db_path = test_db_path("test_db")
+    db_path = test_db_path("test_db1")
     comparator = KpDatabaseComparator(KpConfig(filename=db_path, password="test"))
     assert comparator.get_conflicting_data() == comparator.generate_tables_of_conflicts() == {}
 
@@ -35,3 +35,13 @@ def test_compare_with_details(test_db_path):
         ('red/test1', 'username: test1 vs redtest, password: test1 vs pass1'),
         ('blue/test3', 'username: test3 vs testblue')
     }
+
+
+def test_compare_with_inaccessible_database(test_db_path):
+    db_path = test_db_path("test_db")
+    # the test db test_db_with_keyfile.kdbx has the same root filename as the test "main" file, but it
+    # can't be opened with the same credentials
+    comparator = KpDatabaseComparator(KpConfig(filename=db_path, password="test"))
+    conflicts = comparator.get_conflicting_data()
+    comparator_path = str(db_path.parent / "test_db_with_keyfile.kdbx")
+    assert conflicts[comparator_path] is None
