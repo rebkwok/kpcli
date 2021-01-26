@@ -14,12 +14,14 @@ runner = CliRunner()
 def get_env_vars(db_name, password="test", include_keyfile=False):
     env_vars = {
         # override HOME in case there is a config.ini file already on the host
-       "HOME": str(Path(__file__).parent / f"fixtures"),
-       "KEEPASSDB": str(Path(__file__).parent / f"fixtures/{db_name}.kdbx"),
-       "KEEPASSDB_PASSWORD": password,
+        "HOME": str(Path(__file__).parent / f"fixtures"),
+        "KEEPASSDB": str(Path(__file__).parent / f"fixtures/{db_name}.kdbx"),
+        "KEEPASSDB_PASSWORD": password,
     }
     if include_keyfile:
-        env_vars["KEEPASSDB_KEYFILE"] = str(Path(__file__).parent / f"fixtures/test_keyfile.key")
+        env_vars["KEEPASSDB_KEYFILE"] = str(
+            Path(__file__).parent / f"fixtures/test_keyfile.key"
+        )
     return env_vars
 
 
@@ -97,11 +99,15 @@ def test_add(temp_db_path):
         app,
         [
             "add",
-            "--group", "mygroup",
-            "--title", "a test entry",
-            "--username", "Bugs Bunny",
-            "--password", "carrot"
-        ]
+            "--group",
+            "mygroup",
+            "--title",
+            "a test entry",
+            "--username",
+            "Bugs Bunny",
+            "--password",
+            "carrot",
+        ],
     )
     result = runner.invoke(app, ["get", "test entry"])
     assert "MyGroup/a test entry" in result.stdout
@@ -111,14 +117,7 @@ def test_add(temp_db_path):
 def test_change_password(temp_db_path):
     result = runner.invoke(app, ["get", "gmail", "--show-password"])
     assert "testpass" in result.stdout
-    runner.invoke(
-        app,
-        [
-            "change-password",
-            "gmail",
-            "--password", "boop"
-        ]
-    )
+    runner.invoke(app, ["change-password", "gmail", "--password", "boop"])
     result = runner.invoke(app, ["get", "gmail", "--show-password"])
     assert "testpass" not in result.stdout
     assert "boop" in result.stdout

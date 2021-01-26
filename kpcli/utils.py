@@ -36,14 +36,16 @@ def get_config(profile="default"):
         logger.debug("No config file found, reading config from environment")
         config_location = environ
 
-    missing_config = [var for var in REQUIRED_CONFIG if _get_config_var(var, config_location) is None]
+    missing_config = [
+        var for var in REQUIRED_CONFIG if _get_config_var(var, config_location) is None
+    ]
     if missing_config:
         logger.error("Missing config variable(s): %s", ", ".join(missing_config))
         raise typer.Exit(1)
     db_config = KpConfig(
         filename=Path(_get_config_var("KEEPASSDB", config_location)),
         password=_get_config_var("KEEPASSDB_PASSWORD", config_location),
-        keyfile=_get_config_var("KEEPASSDB_KEYFILE", config_location)
+        keyfile=_get_config_var("KEEPASSDB_KEYFILE", config_location),
     )
     if not db_config.filename.exists():
         logger.error("Database file %s does not exist", db_config.filename)

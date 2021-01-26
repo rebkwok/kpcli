@@ -14,6 +14,7 @@ class KpContext:
     """
     A holder object so we can pass things around in the typer Context
     """
+
     connector = attr.ib(type=KpDatabaseConnector)
     group = attr.ib(type=Optional[Group], default=None)
 
@@ -23,6 +24,7 @@ class KpConfig:
     """
     KeePass database config
     """
+
     filename = attr.ib(type=Path)
     password = attr.ib(type=Optional[str], default=None)
     keyfile = attr.ib(type=Optional[str], default=None)
@@ -33,6 +35,7 @@ class KpEntry:
     """
     Datastructure to hold information about a single KeePass entry
     """
+
     title = attr.ib(type=str)
     username = attr.ib(type=str)
     password = attr.ib(type=str)
@@ -48,7 +51,7 @@ class KpEntry:
             password=entry_obj.password,
             group=entry_obj.group.name,
             url=entry_obj.url,
-            notes=entry_obj.notes
+            notes=entry_obj.notes,
         )
 
     @classmethod
@@ -59,7 +62,7 @@ class KpEntry:
             password=password,
             group=group,
             url=url,
-            notes=notes
+            notes=notes,
         )
 
 

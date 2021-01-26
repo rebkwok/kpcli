@@ -12,10 +12,7 @@ def test_list_all_groups(test_db_path):
     assert connector.list_group_names() == ["Root", "MyGroup"]
 
 
-@pytest.mark.parametrize(
-    "query",
-    ("MyGroup", "group", "mygroup", "my")
-)
+@pytest.mark.parametrize("query", ("MyGroup", "group", "mygroup", "my"))
 def test_list_group_entries(test_db_path, query):
     """Test fetching group entries with full or partial group name"""
     db_path = test_db_path("test_db")
@@ -24,8 +21,7 @@ def test_list_group_entries(test_db_path, query):
 
 
 @pytest.mark.parametrize(
-    "query,expected_number",
-    [("gm", 1), ("gmail", 1), ("il", 1), ("foo", 0)]
+    "query,expected_number", [("gm", 1), ("gmail", 1), ("il", 1), ("foo", 0)]
 )
 def test_find_entries(test_db_path, query, expected_number):
     db_path = test_db_path("test_db")
@@ -38,7 +34,7 @@ def test_find_entries(test_db_path, query, expected_number):
 
 @pytest.mark.parametrize(
     "query,group_name,expected_number",
-    [("gm", "mygroup", 1), ("gmail", "mygroup", 1), ("gmail", "root", 0)]
+    [("gm", "mygroup", 1), ("gmail", "mygroup", 1), ("gmail", "root", 0)],
 )
 def test_find_entries_with_group(test_db_path, query, group_name, expected_number):
     db_path = test_db_path("test_db")
@@ -49,11 +45,9 @@ def test_find_entries_with_group(test_db_path, query, group_name, expected_numbe
     if expected_number == 1:
         assert entries[0].title == "gmail"
 
+
 @pytest.mark.parametrize(
-    "show_password,password",
-    [
-        (False, "********"), (True, "testpass")
-    ]
+    "show_password,password", [(False, "********"), (True, "testpass")]
 )
 def test_get_details(test_db_path, show_password, password):
     db_path = test_db_path("test_db")
@@ -64,17 +58,13 @@ def test_get_details(test_db_path, show_password, password):
         "username": "test@test.com",
         "password": password,
         "URL": "gmail.com",
-        "Notes": ""
+        "Notes": "",
     }
 
 
 @pytest.mark.parametrize(
     "attribute,expected",
-    [
-        ("username", "test@test.com"),
-        ("password", "testpass"),
-        ("url", "gmail.com")
-    ]
+    [("username", "test@test.com"), ("password", "testpass"), ("url", "gmail.com")],
 )
 def test_copy(test_db_path, attribute, expected):
     db_path = test_db_path("test_db")

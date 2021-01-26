@@ -41,7 +41,9 @@ class KpDatabaseConnector:
 
         if group:
             # recursive=False because if we have a specific group we want to search this group only
-            return self.db.find_entries(title=query, group=group, recursive=False, regex=True, flags="i")
+            return self.db.find_entries(
+                title=query, group=group, recursive=False, regex=True, flags="i"
+            )
         else:
             return self.db.find_entries(title=query, regex=True, flags="i")
 
@@ -73,5 +75,5 @@ class KpDatabaseConnector:
             "username": entry.username,
             "password": entry.password if show_password else "*" * len(entry.password),
             "URL": entry.url or "",
-            "Notes": entry.notes or ""
+            "Notes": entry.notes or "",
         }

@@ -20,6 +20,7 @@ app = typer.Typer()
 # VALIDATORS
 ############
 
+
 def validate_group(ctx: typer.Context, group_name):
     """Find the first group matching group_name"""
     group = ctx_connector(ctx).find_group(group_name)
@@ -86,8 +87,10 @@ def ctx_connector(ctx: typer.Context):
 @app.command("ls")
 def list_groups_and_entries(
     ctx: typer.Context,
-    group_name: Optional[str] = typer.Option(None, "--group", "-g", help="Group name (partial allowed)"),
-    entries: bool = typer.Option(False, "--entries", "-e", help="Also list entries")
+    group_name: Optional[str] = typer.Option(
+        None, "--group", "-g", help="Group name (partial allowed)"
+    ),
+    entries: bool = typer.Option(False, "--entries", "-e", help="Also list entries"),
 ):
     """
     List groups and entries
@@ -101,24 +104,26 @@ def list_groups_and_entries(
     if entries:
         for group_name in group_names:
             entry_names = "\n".join(ctx_connector(ctx).list_group_entries(group_name))
-            echo_banner(f"{group_name}", fg= typer.colors.GREEN)
+            echo_banner(f"{group_name}", fg=typer.colors.GREEN)
             typer.echo(entry_names)
     else:
         group_names = "\n".join(group_names)
-        echo_banner("Groups", fg= typer.colors.GREEN)
+        echo_banner("Groups", fg=typer.colors.GREEN)
         typer.echo(group_names)
 
 
 @app.command("add")
 def add_entry(
-        ctx: typer.Context,
-        group: str = typer.Option("root", prompt="Group name (partial matches allowed)", callback=validate_group),
-        title: str = typer.Option(..., prompt=True, callback=validate_title),
-        username: str = typer.Option(..., prompt=True),
-        password: str = typer.Option(..., prompt=True, hide_input=True),
-        url: str = typer.Option("", prompt=True),
-        notes: str = typer.Option("", prompt=True),
-    ):
+    ctx: typer.Context,
+    group: str = typer.Option(
+        "root", prompt="Group name (partial matches allowed)", callback=validate_group
+    ),
+    title: str = typer.Option(..., prompt=True, callback=validate_title),
+    username: str = typer.Option(..., prompt=True),
+    password: str = typer.Option(..., prompt=True, hide_input=True),
+    url: str = typer.Option("", prompt=True),
+    notes: str = typer.Option("", prompt=True),
+):
     """
     Add a new entry
     """
@@ -131,9 +136,14 @@ def add_entry(
 
 @app.command("get")
 def get_entry(
-        ctx: typer.Context,
-        name: str = typer.Argument(..., help="Name (or partial name) of item to fetch.  Specify group with / e.g. root/my_item"),
-        show_password: bool = typer.Option(False, "--show-password", "-s", help="Show password"),
+    ctx: typer.Context,
+    name: str = typer.Argument(
+        ...,
+        help="Name (or partial name) of item to fetch.  Specify group with / e.g. root/my_item",
+    ),
+    show_password: bool = typer.Option(
+        False, "--show-password", "-s", help="Show password"
+    ),
 ):
     """
     Fetch details for a single entry
@@ -173,9 +183,9 @@ def get_or_prompt_single_entry(ctx: typer.Context, name):
 
 @app.command("cp")
 def copy_entry_attribute(
-        ctx: typer.Context,
-        name: str = typer.Argument(..., help="group/title (or part thereof) of entry"),
-        item: CopyOption = typer.Argument(CopyOption.password, help="Attribute to copy")
+    ctx: typer.Context,
+    name: str = typer.Argument(..., help="group/title (or part thereof) of entry"),
+    item: CopyOption = typer.Argument(CopyOption.password, help="Attribute to copy"),
 ):
     """
     Copy entry attribute to clipboard (username, password or url)
@@ -189,8 +199,12 @@ def copy_entry_attribute(
 @app.command()
 def change_password(
     ctx: typer.Context,
-    name: str = typer.Argument(..., help="group/title (or part thereof) of entry to fetch"),
-    new_password: str = typer.Option(..., "--password", prompt="New password", hide_input=True),
+    name: str = typer.Argument(
+        ..., help="group/title (or part thereof) of entry to fetch"
+    ),
+    new_password: str = typer.Option(
+        ..., "--password", prompt="New password", hide_input=True
+    ),
 ):
     """
     Change entry password
@@ -198,14 +212,18 @@ def change_password(
     entry = get_or_prompt_single_entry(ctx, name)
     typer.echo(f"Entry: {entry.group.name}/{entry.title}")
     ctx_connector(ctx).change_password(entry, new_password)
-    typer.secho(f"{entry.group.name}/{entry.title}: password updated", fg=typer.colors.GREEN)
+    typer.secho(
+        f"{entry.group.name}/{entry.title}: password updated", fg=typer.colors.GREEN
+    )
 
 
 @app.callback()
 def main(
-        ctx: typer.Context,
-        profile: Optional[str] = typer.Option("default", "--profile", "-p", help="Specify config profile to use"),
-        loglevel: Optional[str] = typer.Option("INFO")
+    ctx: typer.Context,
+    profile: Optional[str] = typer.Option(
+        "default", "--profile", "-p", help="Specify config profile to use"
+    ),
+    loglevel: Optional[str] = typer.Option("INFO"),
 ):
     """
     Interact with a KeePassX database
@@ -229,7 +247,9 @@ def main(
         else:
             ctx.obj = KpContext(connector=KpDatabaseConnector(config))
     except CredentialsError:
-        typer.secho(f"Invalid credentials for database {config.filename}", fg=typer.colors.RED)
+        typer.secho(
+            f"Invalid credentials for database {config.filename}", fg=typer.colors.RED
+        )
         raise typer.Exit(1)
 
 
