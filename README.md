@@ -73,9 +73,9 @@ If no config.ini file exists, **kpcli** will attempt to find config in the envir
 
 ### Usage Examples ###
 
-List groups and entries
+##### List groups and entries
 ```console
-$kpcli ls
+$ kpcli ls
 
 Database: /path/to/db.kdbx
 ================================================================================
@@ -86,7 +86,7 @@ Internet
 Communications
 ...
 
-$kpcli ls --group comm --entries
+$ kpcli ls --group comm --entries
 Database: /path/to/db.kdbx
 ================================================================================
 Communications
@@ -96,9 +96,9 @@ work email
 ...
 ```
 
-List groups in the database from the "work" profile:
+##### List groups in the database from the "work" profile:
 ```console
-$kpcli --profile work ls
+$ kpcli --profile work ls
 Database: /path/to/workdb.kdbx
 ================================================================================
 Groups
@@ -108,11 +108,11 @@ Work
 ...
 ```
 
-Get an entry  
+##### Get an entry  
 By group and entry title, separated with /.  Note partial matches are allowed.  
 If multiple matching entries are found, all will be listed.
 ```console
-$kpcli get comm/email
+$ kpcli get comm/email
 Database: /path/to/db.kdbx
 ================================================================================
 Communications/my email
@@ -124,30 +124,58 @@ URL:
 Notes: This is my main email address
 ```
 
-Copy an attribute (default password) from an entry to the clipboard  
+##### Copy an attribute (default password) from an entry to the clipboard  
 If multiple entries match, kpcli prompts for a selection.
 ```console
-$kpcli cp comm/email
+$ kpcli cp comm/email
 Entry: Communications/my email
 password copied to clipboard
 
-$kpcli cp comm/email username
+$ kpcli cp comm/email username
 Entry: Communications/my email
 username copied to clipboard
 ```
 
-Add an entry
+##### Add an entry
 ```console
-$kpcli add
+$ kpcli add
 ```
 **kpcli** will prompt for required fields.
 
 
-Change a password
+##### Change a password
 ```console
-$kpcli change-password comm/email
+$ kpcli change-password comm/email
 ```
 **kpcli** will prompt for new password.
+
+
+##### Compare conflicting databases
+
+In the example below, **kpcli** found one conflicting db to compare.  
+The entry with title "entry1" in group "blue" is present in the conflicting db, but missing 
+in the main db.  
+Entry blue/entry2 is present in the main db but missing in the conflicting db.  
+Entry red/entry3 is present in both dbs, but has conflicting username and password values.
+```console
+$ kpcli compare
+
+Database: path/to/db.kdbx
+Database password:
+Looking for conflicting files...
+================================================================================
+Comparison db: path/to/db_conflicting_copy.kdbx
+================================================================================
+╔════════════╤═════════════╤════════════════════╗
+║ Main       │ Conflicting │ Conflicting fields ║
+╠════════════╪═════════════╪════════════════════╣
+║ -          │ blue/entry1 │                    ║ 
+╟────────────┼─────────────┼────────────────────╢
+║ blue/entry2│ -           │                    ║
+╟────────────┼─────────────┼────────────────────╢
+║ red/entry3 │ red/entry3  │ username, password ║
+╚════════════╧═════════════╧════════════════════╝
+```
 
 
 For more detailed usage, use `--help` with any kpcli command listed below.

@@ -67,8 +67,9 @@ def compare(ctx: typer.Context, show_details: bool = False):
     """
     Compare potentially conflicting copies of a KeePassX Database and report conflicts
 
-    If a KeePassX database is opened and modified from multiple locations, KeePassX will create a duplicate
-    with the suffix `_conflicting_copy`
+    If a KeePassX database is opened and modified from multiple locations, conflicting copies may arise.  Dropbox for example
+    will create a duplicate with the suffix `_conflicting_copy`.  Looks for conflicting files with the same stem as the
+    main database file, compares them and reports on the conflicts.
     """
     typer.echo("Looking for conflicting files...")
     conflicting_tables = ctx.obj.generate_tables_of_conflicts(show_details=show_details)
