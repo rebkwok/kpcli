@@ -1,3 +1,5 @@
+![https://github.com/rebkwok/kpcli/workflows/Run%20tests/badge.svg](https://github.com/rebkwok/kpcli/workflows/Run%20tests/badge.svg)
+
 # kpcli
 
 A simple command line tool to interact with KeePassX databases.
