@@ -27,7 +27,7 @@ From source:
 ```
 git clone https://github.com/rebkwok/kpcli.git
 cd kpcli
-poetry install
+poetry install  # pip install poetry first if necessary
 ```
 
 ## Configuration
