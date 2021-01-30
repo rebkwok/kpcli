@@ -7,7 +7,7 @@ import pyperclip
 import pytest
 from typer.testing import CliRunner
 
-from kpcli.kp import app
+from kpcli.cli import app
 
 runner = CliRunner()
 

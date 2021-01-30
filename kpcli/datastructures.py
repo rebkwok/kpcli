@@ -4,7 +4,7 @@ from pathlib import Path
 
 import attr
 from pykeepass.group import Group
-from typing import Optional, NamedTuple
+from typing import Optional
 
 from kpcli.connector import KpDatabaseConnector
 
