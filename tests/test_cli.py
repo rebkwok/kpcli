@@ -3,8 +3,6 @@ from os import environ
 from pathlib import Path
 from unittest.mock import patch
 
-import pyperclip
-import pytest
 from typer.testing import CliRunner
 
 from kpcli.cli import app
@@ -31,6 +29,33 @@ def test_list_groups():
     result = runner.invoke(app, ["ls"])
     assert result.exit_code == 0
     assert "MyGroup" in result.stdout
+
+
+@patch.dict(environ, get_env_vars("test_db"))
+def test_list_groups_with_entries():
+    result = runner.invoke(app, ["ls", "--entries"])
+    assert result.exit_code == 0
+    for group_name in ["Root", "MyGroup"]:
+        assert group_name in result.stdout
+    for entry_name in ["Test Root Entry", "gmail"]:
+        assert entry_name in result.stdout
+
+
+@patch.dict(environ, get_env_vars("test_db"))
+def test_list_single_group_with_entries():
+    result = runner.invoke(app, ["ls", "-g", "mygr", "--entries"])
+    assert result.exit_code == 0
+    for name in ["MyGroup", "gmail"]:
+        assert name in result.stdout
+    for name in ["Root", "Test Root Entry"]:
+        assert name not in result.stdout
+
+
+@patch.dict(environ, get_env_vars("test_db"))
+def test_list_single_group_invalid_name():
+    result = runner.invoke(app, ["ls", "-g", "foo"])
+    assert result.exit_code == 1
+    assert "No group matching 'foo' found" in result.stdout
 
 
 @patch.dict(environ, get_env_vars("test_db_with_keyfile", include_keyfile=True))
@@ -77,20 +102,21 @@ def test_get_with_password():
     assert "********" not in result.stdout
 
 
-@pytest.mark.skipif(environ.get("CI", "0") == "1", reason="skip if running as github action")
 @patch.dict(environ, get_env_vars("test_db"))
-def test_copy():
+@patch("kpcli.connector.pyperclip.copy")
+def test_copy(mock_copy):
     # copies password by default
     runner.invoke(app, ["cp", "gmail"])
-    assert pyperclip.paste() == "testpass"
+
+    mock_copy.assert_called_with("testpass")
 
     # copy username
     runner.invoke(app, ["cp", "gmail", "username"])
-    assert pyperclip.paste() == "test@test.com"
+    mock_copy.assert_called_with("test@test.com")
 
     # copy username with abbreviation
     runner.invoke(app, ["cp", "gmail", "u"])
-    assert pyperclip.paste() == "test@test.com"
+    mock_copy.assert_called_with("test@test.com")
 
 
 @patch.dict(environ, get_env_vars("temp_db"))
@@ -113,6 +139,47 @@ def test_add(temp_db_path):
     )
     result = runner.invoke(app, ["get", "test entry"])
     assert "MyGroup/a test entry" in result.stdout
+
+
+@patch.dict(environ, get_env_vars("temp_db"))
+def test_add_with_missing_group(temp_db_path):
+    result = runner.invoke(app, ["get", "test entry"])
+    assert "No matching entry found" in result.stdout
+    result = runner.invoke(
+        app,
+        [
+            "add",
+            "--title",
+            "a test entry",
+            "--username",
+            "Bugs Bunny",
+            "--password",
+            "carrot",
+        ],
+    )
+    assert result.exit_code == 1
+    assert "--group is required" in result.stdout
+
+
+@patch.dict(environ, get_env_vars("temp_db"))
+def test_add_with_existing_entry_title(temp_db_path):
+    result = runner.invoke(app, ["get", "mygroup/gmail"])
+    assert "gmail" in result.stdout
+    result = runner.invoke(
+        app,
+        [
+            "add",
+            "--group",
+            "mygroup",
+            "--title",
+            "gmail",
+            "--username",
+            "Bugs Bunny",
+            "--password",
+            "carrot",
+        ],
+    )
+    assert "An entry already exists for 'gmail' in group MyGroup" in result.stdout
 
 
 @patch.dict(environ, get_env_vars("temp_db"))

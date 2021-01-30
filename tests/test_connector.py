@@ -64,7 +64,9 @@ def test_get_details(test_db_path, show_password, password):
     }
 
 
-@pytest.mark.skipif(environ.get("CI", "0") == "1", reason="skip if running as github action")
+@pytest.mark.skipif(
+    environ.get("CI", "0") == "1", reason="skip if running as github action"
+)
 @pytest.mark.parametrize(
     "attribute,expected",
     [("username", "test@test.com"), ("password", "testpass"), ("url", "gmail.com")],
@@ -98,3 +100,40 @@ def test_add_new(temp_db_path):
     connector.add_new_entry(group, "A new entry", "test user", "pass", "", "")
     entry = connector.find_entries("new")[0]
     assert connector.get_details(entry)["name"] == "Root/A new entry"
+
+
+def test_edit_entry(temp_db_path):
+    connector = KpDatabaseConnector(KpConfig(filename=temp_db_path, password="test"))
+    entry = connector.find_entries("gmail")[0]
+    connector.edit_entry(entry, "username", "anewemail@test.com")
+    assert (
+        connector.get_details(entry, show_password=True)["username"]
+        == "anewemail@test.com"
+    )
+
+    connector.edit_entry(entry, "url", "http://hey-a-new-url.com")
+    assert (
+        connector.get_details(entry, show_password=True)["URL"]
+        == "http://hey-a-new-url.com"
+    )
+
+
+def test_delete_entry(temp_db_path):
+    connector = KpDatabaseConnector(KpConfig(filename=temp_db_path, password="test"))
+    entry = connector.find_entries("gmail")[0]
+    connector.delete_entry(entry)
+    assert connector.find_entries("gmail") == []
+
+
+def test_add_group(temp_db_path):
+    connector = KpDatabaseConnector(KpConfig(filename=temp_db_path, password="test"))
+    connector.add_group("a new group")
+    assert "a new group" in connector.list_group_names()
+
+
+def test_delete_group(temp_db_path):
+    connector = KpDatabaseConnector(KpConfig(filename=temp_db_path, password="test"))
+    assert connector.list_group_names() == ["Root", "MyGroup"]
+    group = connector.find_group("MyGroup")
+    connector.delete_group(group)
+    assert connector.list_group_names() == ["Root"]
