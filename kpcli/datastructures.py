@@ -72,10 +72,23 @@ class CopyOption(str, Enum):
     password = "password"
     p = "p"
     url = "url"
+    notes = "notes"
 
     def __str__(self):
         if self.value == "u":
             return "username"
         elif self.value == "p":
             return "password"
+        return self.value
+
+
+class EditOption(str, Enum):
+    username = "username"
+    u = "u"
+    url = "url"
+    notes = "notes"
+
+    def __str__(self):
+        if self.value == "u":
+            return "username"
         return self.value

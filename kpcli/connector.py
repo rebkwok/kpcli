@@ -14,6 +14,16 @@ class KpDatabaseConnector:
     def __init__(self, db_config):
         self.db = PyKeePass(*attr.astuple(db_config))
 
+    def add_group(self, group_name, super_group=None):
+        if super_group is None:
+            super_group = self.find_group("root")
+        self.db.add_group(super_group, group_name)
+        self.db.save()
+
+    def delete_group(self, group):
+        self.db.delete_group(group)
+        self.db.save()
+
     def list_group_names(self):
         """Fetch names of all groups"""
         return [group.name for group in self.db.groups]
@@ -56,6 +66,17 @@ class KpDatabaseConnector:
         self.db.add_entry(group, title, username, password, url=url, notes=notes)
         self.db.save()
 
+    def delete_entry(self, entry):
+        self.db.delete_entry(entry)
+        self.db.save()
+
+    def edit_entry(self, entry, field, new_value):
+        try:
+            setattr(entry, field, new_value)
+        except AttributeError:
+            raise AttributeError(f"Entry has no attribute {field}")
+        self.db.save()
+
     def change_password(self, entry, new_password):
         """Change an entry's password"""
         entry.password = new_password
@@ -64,9 +85,14 @@ class KpDatabaseConnector:
     def copy_to_clipboard(self, entry, item):
         """Copy the requested item to the clipboard"""
         try:
-            pyperclip.copy(getattr(entry, item))
+            value = getattr(entry, item)
         except AttributeError:
             raise AttributeError(f"Entry has no attribute {item}")
+
+        if value is not None:
+            pyperclip.copy(getattr(entry, item))
+        else:
+            raise ValueError(f"{item} is None, nothing to copy")
 
     def get_details(self, entry, show_password=False):
         """Retrieve details for a single entry"""
