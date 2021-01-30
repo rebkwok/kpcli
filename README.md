@@ -71,6 +71,39 @@ If no config.ini file exists, **kpcli** will attempt to find config in the envir
 `KEEPASSDB`, `KEYPASSDB_KEYFILE` and `KEEPASSDB_PASSWORD` (falling back to a prompt for the password).
 
 
+For more detailed usage, use `--help` with any kpcli command listed below.
+
+### Usage:
+
+```console
+$ kpcli [OPTIONS] COMMAND [ARGS]...
+```
+
+### Options:
+
+* `-p, --profile TEXT`: Specify config profile to use  [default: default]
+* `--loglevel TEXT`: [default: INFO]
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+
+### Commands:
+
+Group names and entry titles can be passed as partial, case-insensitive strings for matching.
+
+* `ls`: List groups and entries
+* `add-group`: Add a new group
+* `rm-group`: delete a group
+* `get`: Fetch details for a single entry
+* `cp`: Copy entry attribute to clipboard
+* `add`: Add a new entry
+* `edit`: Edit an entry's attributes (except password)
+* `change-password`: Change entry password
+* `rm`: Delete an entry
+* `compare`: Compare potentially conflicting copies of a KeePassX Database and report conflicts
+
+
 ### Usage Examples ###
 
 ##### List groups and entries
@@ -176,33 +209,6 @@ Comparison db: path/to/db_conflicting_copy.kdbx
 ║ red/entry3 │ red/entry3  │ username, password ║
 ╚════════════╧═════════════╧════════════════════╝
 ```
-
-
-For more detailed usage, use `--help` with any kpcli command listed below.
-
-**Usage**:
-
-```console
-$ kpcli [OPTIONS] COMMAND [ARGS]...
-```
-
-**Options**:
-
-* `-p, --profile TEXT`: Specify config profile to use  [default: default]
-* `--loglevel TEXT`: [default: INFO]
-* `--install-completion`: Install completion for the current shell.
-* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
-* `--help`: Show this message and exit.
-
-**Commands**:
-
-* `ls`: List groups and entries
-* `get`: Fetch details for a single entry
-* `cp`: Copy entry attribute to clipboard
-* `add`: Add a new entry
-* `change-password`: Change entry password
-* `compare`: Compare potentially conflicting copies of a KeePassX Database and report conflicts
-
 
 
 
