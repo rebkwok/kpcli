@@ -67,14 +67,18 @@ class KpDatabaseConnector:
         self.db.save()
 
     def delete_entry(self, entry):
+        """Delete an entry"""
         self.db.delete_entry(entry)
         self.db.save()
 
     def edit_entry(self, entry, field, new_value):
+        """Edit a specified field on an entry"""
         try:
-            setattr(entry, field, new_value)
+            # first check the field is a valid one
+            getattr(entry, field)
         except AttributeError:
             raise AttributeError(f"Entry has no attribute {field}")
+        setattr(entry, field, new_value)
         self.db.save()
 
     def change_password(self, entry, new_password):

@@ -23,7 +23,7 @@ def test_list_group_entries(test_db_path, query):
 
 
 @pytest.mark.parametrize(
-    "query,expected_number", [("gm", 1), ("gmail", 1), ("il", 1), ("foo", 0)]
+    "query,expected_number", [("gm", 1), ("gmail", 1), ("il", 1), ("foo", 0), (None, 0)]
 )
 def test_find_entries(test_db_path, query, expected_number):
     db_path = test_db_path("test_db")
@@ -85,6 +85,14 @@ def test_copy_invalid_attribute(test_db_path):
         connector.copy_to_clipboard(entry, "foo")
 
 
+def test_copy_no_value(test_db_path):
+    db_path = test_db_path("test_db")
+    connector = KpDatabaseConnector(KpConfig(filename=db_path, password="test"))
+    entry = connector.find_entries("gmail")[0]
+    with pytest.raises(ValueError):
+        connector.copy_to_clipboard(entry, "notes")
+
+
 def test_change_password(temp_db_path):
     connector = KpDatabaseConnector(KpConfig(filename=temp_db_path, password="test"))
     entry = connector.find_entries("gmail")[0]
@@ -114,6 +122,13 @@ def test_edit_entry(temp_db_path):
         connector.get_details(entry, show_password=True)["URL"]
         == "http://hey-a-new-url.com"
     )
+
+
+def test_edit_entry_invalid_field(temp_db_path):
+    connector = KpDatabaseConnector(KpConfig(filename=temp_db_path, password="test"))
+    entry = connector.find_entries("gmail")[0]
+    with pytest.raises(AttributeError):
+        connector.edit_entry(entry, "unknown", "anewemail@test.com")
 
 
 def test_delete_entry(temp_db_path):
