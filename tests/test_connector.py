@@ -2,7 +2,7 @@
 from os import environ
 
 import pytest
-import pyperclip
+from unittest.mock import patch
 
 from kpcli.connector import KpDatabaseConnector
 from kpcli.datastructures import KpConfig
@@ -64,19 +64,17 @@ def test_get_details(test_db_path, show_password, password):
     }
 
 
-@pytest.mark.skipif(
-    environ.get("CI", "0") == "1", reason="skip if running as github action"
-)
 @pytest.mark.parametrize(
     "attribute,expected",
     [("username", "test@test.com"), ("password", "testpass"), ("url", "gmail.com")],
 )
-def test_copy(test_db_path, attribute, expected):
+@patch("kpcli.connector.pyperclip.copy")
+def test_copy(mock_copy, test_db_path, attribute, expected):
     db_path = test_db_path("test_db")
     connector = KpDatabaseConnector(KpConfig(filename=db_path, password="test"))
     entry = connector.find_entries("gmail")[0]
     connector.copy_to_clipboard(entry, attribute)
-    assert pyperclip.paste() == expected
+    mock_copy.assert_called_with(expected)
 
 
 def test_copy_invalid_attribute(test_db_path):

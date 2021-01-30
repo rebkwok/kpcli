@@ -107,7 +107,6 @@ def test_get_with_password():
 def test_copy(mock_copy):
     # copies password by default
     runner.invoke(app, ["cp", "gmail"])
-
     mock_copy.assert_called_with("testpass")
 
     # copy username
