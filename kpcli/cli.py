@@ -1,19 +1,28 @@
 #!/usr/bin/env python3
 # standards
 import logging
+import signal
 from typing import Optional
 
 # third parties
 from pykeepass.exceptions import CredentialsError
+import pyperclip
 import typer
 
 from kpcli.comparator import KpDatabaseComparator
 from kpcli.datastructures import CopyOption, EditOption, KpContext
 from kpcli.connector import KpDatabaseConnector
-from kpcli.utils import echo_banner, get_config
+from kpcli.utils import (
+    echo_banner,
+    get_config,
+    get_timeout,
+    inputTimeOutHandler,
+    InputTimedOut,
+)
 
 logger = logging.getLogger(__name__)
 app = typer.Typer()
+signal.signal(signal.SIGALRM, inputTimeOutHandler)
 
 
 ############
@@ -252,6 +261,7 @@ def copy_entry_attribute(
 ):
     """
     Copy entry attribute to clipboard (username, password, url, notes)
+    Password is kept on clipboard until user confirms, or timeout is reached (5 seconds by default)
     """
     entry = get_or_prompt_single_entry(ctx, name)
     typer.echo(f"Entry: {entry.group.name}/{entry.title}")
@@ -259,6 +269,32 @@ def copy_entry_attribute(
         ctx_connector(ctx).copy_to_clipboard(entry, str(item))
     except ValueError as e:
         typer.secho(str(e), fg=typer.colors.RED)
+        raise typer.Exit()
+
+    if item == CopyOption.password:
+        # Clear the clipboard after a timeout unless the user indicates they're done with it earlier
+        timeout = ctx.obj.paste_timeout
+        try:
+            typer.secho(
+                f"Password copied to clipboard; timeout in {timeout} seconds",
+                fg=typer.colors.YELLOW,
+            )
+            signal.alarm(timeout)
+            typer.prompt(
+                typer.style(
+                    f"Press any key to clear clipboard and exit",
+                    fg=typer.colors.MAGENTA,
+                    bold=True,
+                )
+            )
+            typer.secho(f"Clipboard cleared", fg=typer.colors.GREEN)
+        except InputTimedOut:
+            typer.secho("\nTimed out, clipboard cleared", fg=typer.colors.RED)
+        except typer.Abort:  # occurs on Ctrl+C
+            typer.secho(f"\nAborted, clipboard cleared", fg=typer.colors.RED)
+            raise typer.Exit()
+        finally:
+            pyperclip.copy("")
     else:
         typer.secho(f"{str(item)} copied to clipboard", fg=typer.colors.GREEN)
 
@@ -300,7 +336,7 @@ def delete_entry(
     """
     entry = get_or_prompt_single_entry(ctx, name)
     entry_string = f"{entry.group.name}/{entry.title}"
-    typer.secho(f"Deleting entry: entry_string", fg=typer.colors.RED)
+    typer.secho(f"Deleting entry: {entry_string}", fg=typer.colors.RED)
     # confirm or abort
     typer.confirm("Are you sure?:", abort=True)
     ctx_connector(ctx).delete_entry(entry)
@@ -351,12 +387,14 @@ def main(
     if config.password is None:
         # If a password wasn't found in the config file or environment, prompt the use for it
         config.password = typer.prompt("Database password", hide_input=True)
-
     try:
         if ctx.invoked_subcommand == "compare":
             ctx.obj = KpDatabaseComparator(config)
         else:
-            ctx.obj = KpContext(connector=KpDatabaseConnector(config))
+            paste_timeout = get_timeout(profile=profile)
+            ctx.obj = KpContext(
+                connector=KpDatabaseConnector(config), paste_timeout=paste_timeout
+            )
     except CredentialsError:
         typer.secho(
             f"Invalid credentials for database {config.filename}", fg=typer.colors.RED

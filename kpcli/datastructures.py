@@ -17,6 +17,7 @@ class KpContext:
 
     connector = attr.ib(type=KpDatabaseConnector)
     group = attr.ib(type=Optional[Group], default=None)
+    paste_timeout = attr.ib(type=int, default=5)
 
 
 @attr.s

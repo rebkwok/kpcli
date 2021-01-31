@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 from os import environ
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import call, patch
 
+import pytest
 from typer.testing import CliRunner
 
 from kpcli.cli import app
@@ -102,20 +103,28 @@ def test_get_with_password():
     assert "********" not in result.stdout
 
 
+@pytest.mark.parametrize(
+    "command,expected_args",
+    [
+        (
+            ["cp", "gmail"],
+            ["testpass", ""],
+        ),  # copies password by default, then copies empty string
+        (["cp", "gmail", "username"], ["test@test.com"]),  # copy username
+        (["cp", "gmail", "u"], ["test@test.com"]),  # copy username with abbreviation
+    ],
+)
 @patch.dict(environ, get_env_vars("test_db"))
 @patch("kpcli.connector.pyperclip.copy")
-def test_copy(mock_copy):
-    # copies password by default
-    runner.invoke(app, ["cp", "gmail"])
-    mock_copy.assert_called_with("testpass")
-
-    # copy username
-    runner.invoke(app, ["cp", "gmail", "username"])
-    mock_copy.assert_called_with("test@test.com")
-
-    # copy username with abbreviation
-    runner.invoke(app, ["cp", "gmail", "u"])
-    mock_copy.assert_called_with("test@test.com")
+@patch("kpcli.cli.typer.prompt")
+@patch("kpcli.cli.signal.alarm")
+def test_copy(mock_alarm, mock_prompt, mock_copy, command, expected_args):
+    # mock prompt for confirmation after password copy - this will trigger the clipboard to be cleared
+    # also mock the alarm signal so it doesn't pollute other tests
+    mock_prompt.return_value = "y"
+    runner.invoke(app, command)
+    calls = [call(arg) for arg in expected_args]
+    mock_copy.assert_has_calls(calls)
 
 
 @patch.dict(environ, get_env_vars("temp_db"))

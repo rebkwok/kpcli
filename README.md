@@ -66,6 +66,9 @@ KEYPASSDB_KEYFILE=/path/to/mykeyfile.key
 KEEPASSDB=/path/to/workdb.kdbx
 ```
 
+By default, passwords copied to the clipboard will timeout after 5 seconds. To change the 
+timeout, provide a `KEYPASSDB_TIMEOUT` config or environment variable.
+
 ### Environment Variables
 If no config.ini file exists, **kpcli** will attempt to find config in the environment variables 
 `KEEPASSDB`, `KEYPASSDB_KEYFILE` and `KEEPASSDB_PASSWORD` (falling back to a prompt for the password).
