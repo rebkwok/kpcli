@@ -1,3 +1,7 @@
+0.2.1
+-----
+- Clear clipboard after a timeout on password copying
+
 0.2.0
 -----
 New commands:
