@@ -11,7 +11,7 @@ from kpcli.datastructures import KpConfig
 def test_list_all_groups(test_db_path):
     db_path = test_db_path("test_db")
     connector = KpDatabaseConnector(KpConfig(filename=db_path, password="test"))
-    assert connector.list_group_names() == ["Root", "MyGroup"]
+    assert connector.list_group_names() == ["MyGroup", "Root", "Test"]
 
 
 @pytest.mark.parametrize("query", ("MyGroup", "group", "mygroup", "my"))
@@ -146,7 +146,7 @@ def test_add_group(temp_db_path):
 
 def test_delete_group(temp_db_path):
     connector = KpDatabaseConnector(KpConfig(filename=temp_db_path, password="test"))
-    assert connector.list_group_names() == ["Root", "MyGroup"]
+    assert connector.list_group_names() == ["MyGroup", "Root", "Test"]
     group = connector.find_group("MyGroup")
     connector.delete_group(group)
-    assert connector.list_group_names() == ["Root"]
+    assert connector.list_group_names() == ["Root", "Test"]

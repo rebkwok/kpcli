@@ -85,22 +85,48 @@ def test_config_file_overrides_env_vars(mock_config_file):
     assert result.exit_code == 0
 
 
+@pytest.mark.parametrize(
+    "command,password_expected",
+    [
+        (["get", "gmail"], False),
+        (["get", "gmail", "--show-password"], True)
+    ],
+)
 @patch.dict(environ, get_env_vars("test_db"))
-def test_get():
-    result = runner.invoke(app, ["get", "gmail"])
+def test_get(command, password_expected):
+    result = runner.invoke(app, command)
     assert result.exit_code == 0
     assert "MyGroup/gmail" in result.stdout
+    if password_expected:
+        assert "testpass" in result.stdout
+        assert "********" not in result.stdout
+    else:
+        assert "testpass" not in result.stdout
+        assert "********" in result.stdout
 
 
+@pytest.mark.parametrize(
+    "prompt_values,expected_stdout_terms,unexpected_stdout_terms",
+    [
+        (["1"], ["Entry: Test/Multi1"], ["Entry: Test/Multi2", "try again"]),
+        (["foo"], ["Invalid selection foo; try again"], ["Entry: Test/Multi1"]),
+        (["6"], ["Invalid selection 6; try again"], ["Entry: Test/Multi1"]),
+        (["6", "2"], ["Invalid selection 6; try again", "Entry: Test/Multi2"], ["Entry: Test/Multi1"]),
+    ]
+)
 @patch.dict(environ, get_env_vars("test_db"))
-def test_get_with_password():
-    result = runner.invoke(app, ["get", "gmail"])
-    assert "testpass" not in result.stdout
-    assert "********" in result.stdout
-
-    result = runner.invoke(app, ["get", "gmail", "--show-password"])
-    assert "testpass" in result.stdout
-    assert "********" not in result.stdout
+@patch("kpcli.cli.typer.prompt")
+@patch("kpcli.cli.signal.alarm")
+def test_copy_multiple_matches(
+        mock_alarm, mock_prompt, prompt_values, expected_stdout_terms, unexpected_stdout_terms
+):
+    # also mock the alarm signal so it doesn't pollute other tests
+    mock_prompt.side_effect = prompt_values
+    result = runner.invoke(app, ["cp", "multi"])
+    for term in expected_stdout_terms:
+        assert term in result.stdout
+    for term in unexpected_stdout_terms:
+        assert term not in result.stdout
 
 
 @pytest.mark.parametrize(
@@ -198,3 +224,30 @@ def test_change_password(temp_db_path):
     result = runner.invoke(app, ["get", "gmail", "--show-password"])
     assert "testpass" not in result.stdout
     assert "boop" in result.stdout
+
+
+@patch.dict(environ, get_env_vars("temp_db"))
+def test_edit(temp_db_path):
+    result = runner.invoke(app, ["get", "gmail"])
+    assert "foo.com"  not in result.stdout
+    runner.invoke(app, ["edit", "gmail", "--field", "url", "--value", "foo.com"])
+    result = runner.invoke(app, ["get", "gmail"])
+    assert "foo.com" in result.stdout
+
+
+@patch.dict(environ, get_env_vars("temp_db"))
+def test_add_group(temp_db_path):
+    runner.invoke(app, ["add-group", "--base-group", "root", "--new-group-name", "newly made group"])
+    result = runner.invoke(app, ["ls"])
+    assert "newly made group" in result.stdout
+
+
+@patch.dict(environ, get_env_vars("temp_db"))
+@patch("kpcli.cli.typer.confirm")
+def test_delete_group(mock_confirm, temp_db_path):
+    # mock the confirmation
+    mock_confirm.return_value = "y"
+    result = runner.invoke(app, ["ls"])
+    assert "MyGroup" in result.stdout
+    result = runner.invoke(app, ["rm-group", "MyGroup"])
+    assert "MyGroup: deleted" in result.stdout

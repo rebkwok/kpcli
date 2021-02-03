@@ -26,12 +26,12 @@ class KpDatabaseConnector:
 
     def list_group_names(self):
         """Fetch names of all groups"""
-        return [group.name for group in self.db.groups]
+        return sorted([group.name for group in self.db.groups], key=lambda name: name.lower())
 
     def list_group_entries(self, group_name):
         """Fetch names of all entries in a single group"""
         group = self.find_group(group_name=group_name)
-        return [entry.title for entry in group.entries]
+        return sorted([entry.title for entry in group.entries], key=lambda name: name.lower())
 
     def find_entries(self, query, group=None):
         """
@@ -51,11 +51,13 @@ class KpDatabaseConnector:
 
         if group:
             # recursive=False because if we have a specific group we want to search this group only
-            return self.db.find_entries(
+            entries = self.db.find_entries(
                 title=query, group=group, recursive=False, regex=True, flags="i"
             )
         else:
-            return self.db.find_entries(title=query, regex=True, flags="i")
+            entries = self.db.find_entries(title=query, regex=True, flags="i")
+        entries.sort(key=lambda entry: (entry.group.name, entry.title))
+        return entries
 
     def find_group(self, group_name):
         """Find the first matching group"""
