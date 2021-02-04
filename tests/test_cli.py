@@ -74,23 +74,27 @@ def test_invalid_credentials_database_with_keyfile():
 
 
 @patch.dict(environ, get_env_vars("test_db"))
-def test_config_file_overrides_env_vars(mock_config_file):
-    # The config file has invalid credentials in the default profile
+def test_env_vars_overrides_config_file(mock_config_file):
+    # The config file has invalid credentials in the default profile, overriden by env var
     result = runner.invoke(app, ["ls"])
-    assert result.exit_code == 1
-    assert "Invalid credentials" in result.stdout
+    assert result.exit_code == 0
 
     # valid credentials in the test profile
     result = runner.invoke(app, ["--profile", "test", "ls"])
     assert result.exit_code == 0
 
 
+@patch.dict(environ, get_env_vars("test_db", password=""))
+def test_overrides_config_file_without_env_vars(mock_config_file):
+    # The config file has invalid credentials in the default profile
+    result = runner.invoke(app, ["ls"])
+    assert result.exit_code == 1
+    assert "Invalid credentials" in result.stdout
+
+
 @pytest.mark.parametrize(
     "command,password_expected",
-    [
-        (["get", "gmail"], False),
-        (["get", "gmail", "--show-password"], True)
-    ],
+    [(["get", "gmail"], False), (["get", "gmail", "--show-password"], True)],
 )
 @patch.dict(environ, get_env_vars("test_db"))
 def test_get(command, password_expected):
@@ -111,14 +115,22 @@ def test_get(command, password_expected):
         (["1"], ["Entry: Test/Multi1"], ["Entry: Test/Multi2", "try again"]),
         (["foo"], ["Invalid selection foo; try again"], ["Entry: Test/Multi1"]),
         (["6"], ["Invalid selection 6; try again"], ["Entry: Test/Multi1"]),
-        (["6", "2"], ["Invalid selection 6; try again", "Entry: Test/Multi2"], ["Entry: Test/Multi1"]),
-    ]
+        (
+            ["6", "2"],
+            ["Invalid selection 6; try again", "Entry: Test/Multi2"],
+            ["Entry: Test/Multi1"],
+        ),
+    ],
 )
 @patch.dict(environ, get_env_vars("test_db"))
 @patch("kpcli.cli.typer.prompt")
 @patch("kpcli.cli.signal.alarm")
 def test_copy_multiple_matches(
-        mock_alarm, mock_prompt, prompt_values, expected_stdout_terms, unexpected_stdout_terms
+    mock_alarm,
+    mock_prompt,
+    prompt_values,
+    expected_stdout_terms,
+    unexpected_stdout_terms,
 ):
     # also mock the alarm signal so it doesn't pollute other tests
     mock_prompt.side_effect = prompt_values
@@ -229,7 +241,7 @@ def test_change_password(temp_db_path):
 @patch.dict(environ, get_env_vars("temp_db"))
 def test_edit(temp_db_path):
     result = runner.invoke(app, ["get", "gmail"])
-    assert "foo.com"  not in result.stdout
+    assert "foo.com" not in result.stdout
     runner.invoke(app, ["edit", "gmail", "--field", "url", "--value", "foo.com"])
     result = runner.invoke(app, ["get", "gmail"])
     assert "foo.com" in result.stdout
@@ -237,7 +249,10 @@ def test_edit(temp_db_path):
 
 @patch.dict(environ, get_env_vars("temp_db"))
 def test_add_group(temp_db_path):
-    runner.invoke(app, ["add-group", "--base-group", "root", "--new-group-name", "newly made group"])
+    runner.invoke(
+        app,
+        ["add-group", "--base-group", "root", "--new-group-name", "newly made group"],
+    )
     result = runner.invoke(app, ["ls"])
     assert "newly made group" in result.stdout
 

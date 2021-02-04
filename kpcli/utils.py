@@ -14,11 +14,7 @@ logger = logging.getLogger(__name__)
 REQUIRED_CONFIG = ["KEEPASSDB"]
 
 
-def _get_config_var(var, config_dict, default=None):
-    return config_dict.get(var, default)
-
-
-def get_config_location(profile="default"):
+def get_config_from_file(profile="default"):
     """
     Identify config location
     Returns a config parser or environ
@@ -31,19 +27,7 @@ def get_config_location(profile="default"):
         if profile not in config:
             raise typer.BadParameter(f"Profile {profile} does not exist")
         if config[profile]:
-            config_location = config[profile]
-    else:
-        logger.debug("No config file found, reading config from environment")
-        config_location = environ
-
-    missing_config = [
-        var for var in REQUIRED_CONFIG if _get_config_var(var, config_location) is None
-    ]
-    if missing_config:
-        logger.error("Missing config variable(s): %s", ", ".join(missing_config))
-        raise typer.Exit(1)
-
-    return config_location
+            return config[profile]
 
 
 def get_config(profile="default"):
@@ -51,11 +35,23 @@ def get_config(profile="default"):
     Find database config from a config.ini file or relevant environment variables
     returns a KPConfig instance
     """
-    config_location = get_config_location(profile)
+    config_from_file = get_config_from_file(profile) or {}
+    db_path = environ.get("KEEPASSDB") or config_from_file.get("KEEPASSDB")
+    password = environ.get("KEEPASSDB_PASSWORD") or config_from_file.get(
+        "KEEPASSDB_PASSWORD"
+    )
+    keyfile = environ.get("KEEPASSDB_KEYFILE") or config_from_file.get(
+        "KEEPASSDB_KEYFILE"
+    )
+
+    if db_path is None:
+        logger.error("Missing config variable: KEEPASSDB")
+        raise typer.Exit(1)
+
     db_config = KpConfig(
-        filename=Path(_get_config_var("KEEPASSDB", config_location)),
-        password=_get_config_var("KEEPASSDB_PASSWORD", config_location),
-        keyfile=_get_config_var("KEEPASSDB_KEYFILE", config_location),
+        filename=Path(db_path),
+        password=password,
+        keyfile=keyfile,
     )
     if not db_config.filename.exists():
         logger.error("Database file %s does not exist", db_config.filename)
@@ -65,9 +61,13 @@ def get_config(profile="default"):
 
 
 def get_timeout(profile="default"):
-    config_location = get_config_location(profile)
+    config_from_file = get_config_from_file(profile) or {}
+
     try:
-        return int(_get_config_var("KEEPASSDB_TIMEOUT", config_location, 5))
+        return int(
+            environ.get("KEEPASSDB_TIMEOUT")
+            or config_from_file.get("KEEPASSDB_TIMEOUT", 5)
+        )
     except ValueError:
         typer.secho(
             "Invalid timeout found, defaulting to 5 seconds",

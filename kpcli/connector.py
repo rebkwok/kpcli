@@ -26,12 +26,16 @@ class KpDatabaseConnector:
 
     def list_group_names(self):
         """Fetch names of all groups"""
-        return sorted([group.name for group in self.db.groups], key=lambda name: name.lower())
+        return sorted(
+            [group.name for group in self.db.groups], key=lambda name: name.lower()
+        )
 
     def list_group_entries(self, group_name):
         """Fetch names of all entries in a single group"""
         group = self.find_group(group_name=group_name)
-        return sorted([entry.title for entry in group.entries], key=lambda name: name.lower())
+        return sorted(
+            [entry.title for entry in group.entries], key=lambda name: name.lower()
+        )
 
     def find_entries(self, query, group=None):
         """

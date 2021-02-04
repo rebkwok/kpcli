@@ -32,8 +32,8 @@ poetry install  # pip install poetry first if necessary
 
 ## Configuration
 
-**kpcli** will look for database configuration first in a config.ini file, and if 
-one is not found, in environment variables.
+**kpcli** will look for database configuration first in in environment variables, and 
+then in a config.ini file.
 
 **NOTE:** 
 AT YOUR OWN RISK! `KEEPASSDB_PASSWORD` can be set in the config.ini file or as an environment variable if you really want to.
