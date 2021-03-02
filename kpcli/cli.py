@@ -10,7 +10,7 @@ import pyperclip
 import typer
 
 from kpcli.comparator import KpDatabaseComparator
-from kpcli.datastructures import CopyOption, EditOption, KpContext
+from kpcli.datastructures import CopyOption, EditOption, Encrypter, KpContext
 from kpcli.connector import KpDatabaseConnector
 from kpcli.utils import (
     echo_banner,
@@ -383,10 +383,15 @@ def main(
     logging.basicConfig(level=loglevel.upper())
 
     # Instantiate the relevant database utility object on the Context
-    config = get_config(profile=profile)
+    config, store_encrypted_password = get_config(profile=profile)
+    encrypter = Encrypter(store_encrypted_password=store_encrypted_password)
     if config.password is None:
         # If a password wasn't found in the config file or environment, prompt the use for it
         config.password = typer.prompt("Database password", hide_input=True)
+        if store_encrypted_password:
+            encrypter.save_password(config)
+        else:
+            encrypter.reset()
     try:
         if ctx.invoked_subcommand == "compare":
             ctx.obj = KpDatabaseComparator(config)
@@ -399,6 +404,8 @@ def main(
         typer.secho(
             f"Invalid credentials for database {config.filename}", fg=typer.colors.RED
         )
+        if store_encrypted_password:
+            encrypter.reset()
         raise typer.Exit(1)
 
 

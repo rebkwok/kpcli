@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
+from datetime import datetime
 from enum import Enum
+from os import environ
 from pathlib import Path
+import random
+import string
 
 import attr
+from cryptography.fernet import Fernet
 from pykeepass.group import Group
 from typing import Optional
 
@@ -93,3 +98,73 @@ class EditOption(str, Enum):
         if self.value == "u":
             return "username"
         return self.value
+
+
+class Encrypter:
+    """
+    Helper class for storing and retrieving encrypted database password
+    Generates an encryption key and a salt and stores the encrypted password to file
+    Every 24 hours the salt expires and is regenerated
+    """
+
+    def __init__(self, store_encrypted_password=True):
+        self.secret_file = None
+        self.secret = None
+        self.password_file = None
+        self.salt_files = None
+        self.latest_salt_file = None
+        self.timeout = 60 * 60 * 24
+        self.store_encrypted_password = store_encrypted_password
+        if self.store_encrypted_password is False:
+            self.reset()
+
+    def setup(self):
+        if self.secret is None:
+            self.secret_file = Path(environ["HOME"]) / ".kp" / ".secret"
+            if self.store_encrypted_password:
+                if not self.secret_file.exists():
+                    # generate a secret
+                    key = Fernet.generate_key()
+                    self.secret = self.secret_file.write_bytes(key)
+                else:
+                    self.secret = self.secret_file.read_bytes()
+            self.password_file = Path(environ["HOME"]) / ".kp" / ".pass"
+            self.salt_files = list((Path(environ["HOME"]) / ".kp").glob(".salt_*"))
+            self.latest_salt_file = max(self.salt_files) if self.salt_files else None
+
+    def get_password(self):
+        self.setup()
+        if self.latest_salt_file:
+            timestamp = float(self.latest_salt_file.name.split("_")[-1])
+            # check timestamp and delete/refresh salt every 24 hrs
+            if datetime.now().timestamp() - timestamp > self.timeout:
+                self.reset()
+                return
+            fernet = Fernet(self.secret)
+            salt = self.latest_salt_file.read_text()
+            password_with_salt = self.password_file.read_bytes()
+            password = (
+                fernet.decrypt(password_with_salt).decode("utf-8").replace(salt, "")
+            )
+            return password
+
+    def reset(self):
+        self.setup()
+        for salt_file in self.salt_files:
+            salt_file.unlink()
+        for filepath in [self.secret_file, self.password_file]:
+            if filepath.exists():
+                filepath.unlink()
+        return
+
+    def save_password(self, config):
+        self.setup()
+        salt_file = (
+            Path(environ["HOME"]) / ".kp" / f".salt_{datetime.now().timestamp()}"
+        )
+        # Generate random salt, hash and save password and store on config obj
+        salt = f"".join(random.choice(string.ascii_letters) for i in range(24))
+        password_with_salt = f"{salt}{config.password}"
+        salt_file.write_text(salt)
+        fernet = Fernet(self.secret)
+        self.password_file.write_bytes(fernet.encrypt(password_with_salt.encode()))

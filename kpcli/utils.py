@@ -7,7 +7,8 @@ from pathlib import Path
 
 import typer
 
-from kpcli.datastructures import KpConfig
+from kpcli.datastructures import Encrypter, KpConfig
+
 
 logger = logging.getLogger(__name__)
 
@@ -53,11 +54,23 @@ def get_config(profile="default"):
         password=password,
         keyfile=keyfile,
     )
+    store_encrypted_password = environ.get(
+        "STORE_ENCRYPTED_PASSWORD", config_from_file.get("STORE_ENCRYPTED_PASSWORD", False),
+    )
+    store_encrypted_password = str(store_encrypted_password).lower() in ["true", "1"]
     if not db_config.filename.exists():
         logger.error("Database file %s does not exist", db_config.filename)
         raise typer.Exit(1)
+    if db_config.password is None and store_encrypted_password:
+        encrypter = Encrypter()
+        reset_password = environ.get("RESET_STORED_PASSWORD", False)
+        reset_password = str(reset_password).lower() in ["true", "1"]
+        if reset_password:
+            encrypter.reset()
+        else:
+            db_config.password = encrypter.get_password()
     typer.secho(f"Database: {db_config.filename}", fg=typer.colors.YELLOW)
-    return db_config
+    return db_config, store_encrypted_password
 
 
 def get_timeout(profile="default"):

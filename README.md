@@ -35,10 +35,13 @@ poetry install  # pip install poetry first if necessary
 **kpcli** will look for database configuration first in in environment variables, and 
 then in a config.ini file.
 
+The (encrypted) database password can be stored by setting `STORE_ENCRYPTED_PASSWORD` to True in the config.ini file or 
+as an environment variable.  **kpcli** will prompt for the password once and then every 24 hours.
+
+
 **NOTE:** 
-AT YOUR OWN RISK! `KEEPASSDB_PASSWORD` can be set in the config.ini file or as an environment variable if you really want to.
-Not advised unless you implement some method of encrypting and retrieving it before passing to **kpcli**.  If no `KEEPASSDB_PASSWORD`
-is found, **kpcli** will prompt for it.
+AT YOUR OWN RISK! `KEEPASSDB_PASSWORD` can be set in plaintext in the config.ini file or as an environment variable if you really want to.
+If no `KEEPASSDB_PASSWORD` is found, **kpcli** will prompt for it.
 
 ### Config file 
 
