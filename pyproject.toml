@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kpcli"
-version = "0.2.1"
+version = "0.2.2"
 description = "A simple command line tool to interact with KeePassX databases"
 authors = ["Becky Smith <rebkwok@gmail.com>"]
 license = "GPL-3.0-or-later"

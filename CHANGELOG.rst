@@ -1,3 +1,7 @@
+0.2.2
+-----
+- Option to store encrypted password
+
 0.2.1
 -----
 - Clear clipboard after a timeout on password copying
