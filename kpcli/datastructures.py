@@ -125,7 +125,8 @@ class Encrypter:
                 if not self.secret_file.exists():
                     # generate a secret
                     key = Fernet.generate_key()
-                    self.secret = self.secret_file.write_bytes(key)
+                    self.secret = key
+                    self.secret_file.write_bytes(key)
                 else:
                     self.secret = self.secret_file.read_bytes()
             self.password_file = Path(environ["HOME"]) / ".kp" / ".pass"
@@ -134,7 +135,7 @@ class Encrypter:
 
     def get_password(self):
         self.setup()
-        if self.latest_salt_file:
+        if self.latest_salt_file.exists() and self.password_file.exists():
             timestamp = float(self.latest_salt_file.name.split("_")[-1])
             # check timestamp and delete/refresh salt every 24 hrs
             if datetime.now().timestamp() - timestamp > self.timeout:

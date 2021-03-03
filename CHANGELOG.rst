@@ -1,3 +1,7 @@
+0.2.3
+-----
+Bugfix
+
 0.2.2
 -----
 - Option to store encrypted password
