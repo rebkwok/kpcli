@@ -1,3 +1,7 @@
+0.2.4
+-----
+Fix bug if salt files deleted
+
 0.2.3
 -----
 Bugfix

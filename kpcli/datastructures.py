@@ -135,7 +135,7 @@ class Encrypter:
 
     def get_password(self):
         self.setup()
-        if self.latest_salt_file.exists() and self.password_file.exists():
+        if self.latest_salt_file is not None and self.password_file.exists():
             timestamp = float(self.latest_salt_file.name.split("_")[-1])
             # check timestamp and delete/refresh salt every 24 hrs
             if datetime.now().timestamp() - timestamp > self.timeout:
