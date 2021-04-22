@@ -1,3 +1,7 @@
+0.2.5
+-----
+Bump
+
 0.2.4
 -----
 Fix bug if salt files deleted
