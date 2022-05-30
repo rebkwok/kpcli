@@ -108,8 +108,19 @@ class KpDatabaseConnector:
         """Retrieve details for a single entry"""
         return {
             "name": f"{entry.group.name}/{entry.title}",
-            "username": entry.username,
-            "password": entry.password if show_password else "*" * len(entry.password),
+            "username": entry.username or "",
+            "password": self._format_password(entry, show_password),
             "URL": entry.url or "",
             "Notes": entry.notes or "",
         }
+
+    def _format_password(self, entry, show_password=False):
+        """
+        Format password for output considering --show_password
+        option and that attribute is nullable.
+        """
+        if entry.password is None:
+            return ""
+        if show_password:
+            return entry.password
+        return "*" * len(entry.password)
