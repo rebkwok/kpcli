@@ -30,14 +30,21 @@ signal.signal(signal.SIGALRM, inputTimeOutHandler)
 ############
 
 
+def get_obj_from_ctx(ctx):
+    if "obj" not in ctx.obj:
+        setup_db(ctx)
+    return ctx.obj["obj"]
+
+
 def validate_group(ctx: typer.Context, group_name):
-    """Find the first group matching group_name"""
+    """Find the first group matching group_name"""    
+    obj = get_obj_from_ctx(ctx)
     group = ctx_connector(ctx).find_group(group_name)
     if group is None:
         typer.echo(f"No group matching '{group_name}' found")
         raise typer.Exit(1)
     typer.echo(f"Group found: {group.name}")
-    ctx.obj.group = group
+    obj.group = group
     return group
 
 
@@ -45,8 +52,9 @@ def validate_title(ctx: typer.Context, title):
     """
     Validate title when adding a new entry and abort if an entry already exists with the requested title
     """
+    obj = get_obj_from_ctx(ctx)
     # group should already be set, either at the command line or from a prompt
-    group = ctx.obj.group
+    group = obj.group
     if group is None:
         # group may be None if a user specified --title at the command line
         typer.echo("--group is required")
@@ -63,8 +71,9 @@ def validate_new_group_name(ctx: typer.Context, name):
     """
     Validate group name when adding a new group and abort if a group already exists with the requested title
     """
+    obj = get_obj_from_ctx(ctx)
     # group should already be set, either at the command line or from a prompt
-    base_group = ctx.obj.group
+    base_group = obj.group
     if base_group is None:
         # group may be None if a user specified --name at the command line
         typer.echo(f"--group is required")
@@ -100,8 +109,9 @@ def compare(ctx: typer.Context, show_details: bool = False):
     will create a duplicate with the suffix `_conflicting_copy`.  Looks for conflicting files with the same stem as the
     main database file, compares them and reports on the conflicts.
     """
+    obj = get_obj_from_ctx(ctx)
     typer.echo("Looking for conflicting files...")
-    conflicting_tables = ctx.obj.generate_tables_of_conflicts(show_details=show_details)
+    conflicting_tables = obj.generate_tables_of_conflicts(show_details=show_details)
     if not conflicting_tables:
         typer.echo("No conflicting tables found")
     for conflicting_table_name, conflicting_table in conflicting_tables.items():
@@ -111,7 +121,8 @@ def compare(ctx: typer.Context, show_details: bool = False):
 
 def ctx_connector(ctx: typer.Context):
     """Helper function to retrieve KpDatabaseConnector set on context"""
-    return ctx.obj.connector
+    obj = get_obj_from_ctx(ctx)
+    return obj.connector
 
 
 @app.command("ls")
@@ -125,6 +136,7 @@ def list_groups_and_entries(
     """
     List groups and entries
     """
+    setup_db(ctx)
     if group_name:
         group = validate_group(ctx, group_name)
         group_names = [group.name]
@@ -220,6 +232,7 @@ def get_entry(
     """
     Fetch details for a single entry
     """
+    setup_db(ctx)
     entries = ctx_connector(ctx).find_entries(name)
     if not entries:
         typer.echo("No matching entry found")
@@ -263,6 +276,7 @@ def copy_entry_attribute(
     Copy entry attribute to clipboard (username, password, url, notes)
     Password is kept on clipboard until user confirms, or timeout is reached (5 seconds by default)
     """
+    obj = get_obj_from_ctx(ctx)
     entry = get_or_prompt_single_entry(ctx, name)
     typer.echo(f"Entry: {entry.group.name}/{entry.title}")
     try:
@@ -273,7 +287,7 @@ def copy_entry_attribute(
 
     if item == CopyOption.password:
         # Clear the clipboard after a timeout unless the user indicates they're done with it earlier
-        timeout = ctx.obj.paste_timeout
+        timeout = obj.paste_timeout
         try:
             typer.secho(
                 f"Password copied to clipboard; timeout in {timeout} seconds",
@@ -315,6 +329,7 @@ def edit_entry(
     """
     Edit entry attribute (other than password)
     """
+    setup_db(ctx)
     entry = get_or_prompt_single_entry(ctx, name)
     typer.echo(f"Entry: {entry.group.name}/{entry.title}")
     ctx_connector(ctx).edit_entry(entry, str(field), new_value)
@@ -334,6 +349,7 @@ def delete_entry(
     """
     Delete entry
     """
+    setup_db(ctx)
     entry = get_or_prompt_single_entry(ctx, name)
     entry_string = f"{entry.group.name}/{entry.title}"
     typer.secho(f"Deleting entry: {entry_string}", fg=typer.colors.RED)
@@ -381,9 +397,14 @@ def main(
     Set additional profiles in config.ini to allow switching between different databases
     """
     logging.basicConfig(level=loglevel.upper())
+    ctx.ensure_object(dict)
+    ctx.obj["profile"] = profile
+    if not ctx.invoked_subcommand:
+        setup_db(ctx)
 
+def setup_db(ctx):
     # Instantiate the relevant database utility object on the Context
-    config, store_encrypted_password = get_config(profile=profile)
+    config, store_encrypted_password = get_config(profile=ctx.obj["profile"])
     encrypter = Encrypter(store_encrypted_password=store_encrypted_password)
     if config.password is None:
         # If a password wasn't found in the config file or environment, prompt the use for it
@@ -394,10 +415,10 @@ def main(
             encrypter.reset()
     try:
         if ctx.invoked_subcommand == "compare":
-            ctx.obj = KpDatabaseComparator(config)
+            ctx.obj["obj"] = KpDatabaseComparator(config)
         else:
-            paste_timeout = get_timeout(profile=profile)
-            ctx.obj = KpContext(
+            paste_timeout = get_timeout(profile=ctx.obj["profile"])
+            ctx.obj["obj"] = KpContext(
                 connector=KpDatabaseConnector(config), paste_timeout=paste_timeout
             )
     except CredentialsError:

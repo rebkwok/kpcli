@@ -4,3 +4,7 @@ __pycache__/*
 .DS_Store
 dist/
 htmlcov/
+tests/fixtures/.cache/
+tests/fixtures/.ipython/
+tests/fixtures/.pdbhistory
+.venv/
