@@ -1,3 +1,11 @@
+0.3.0
+-----
+Drop support for Python 3.6
+Update dependencies
+Fix bug for entries with no password (PR#6 from @delameter)
+Initiate database setup after calling subcommand; this means that
+`kpcli <subcommand> --help` doesn't prompt for the db password
+
 0.2.5
 -----
 Bump
