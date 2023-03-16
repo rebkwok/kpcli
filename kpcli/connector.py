@@ -12,7 +12,9 @@ class KpDatabaseConnector:
     """
 
     def __init__(self, db_config):
-        self.db = PyKeePass(*attr.astuple(db_config))
+        self.db = PyKeePass(
+            str(db_config.filename), db_config.password, db_config.keyfile
+        )
 
     def add_group(self, group_name, super_group=None):
         if super_group is None:
