@@ -7,6 +7,7 @@ from unittest.mock import patch
 from kpcli.connector import KpDatabaseConnector
 from kpcli.datastructures import KpConfig
 
+from .conftest import GROUP_ENTRY_NAMES
 
 def test_list_all_groups(test_db_path):
     db_path = test_db_path("test_db")
@@ -19,7 +20,7 @@ def test_list_group_entries(test_db_path, query):
     """Test fetching group entries with full or partial group name"""
     db_path = test_db_path("test_db")
     connector = KpDatabaseConnector(KpConfig(filename=db_path, password="test"))
-    assert connector.list_group_entries(query) == ["gmail"]
+    assert connector.list_group_entries(query) == GROUP_ENTRY_NAMES
 
 
 @pytest.mark.parametrize(

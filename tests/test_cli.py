@@ -8,6 +8,8 @@ from typer.testing import CliRunner
 
 from kpcli.cli import app
 
+from .conftest import GROUP_ENTRY_NAMES
+
 runner = CliRunner()
 
 
@@ -38,7 +40,7 @@ def test_list_groups_with_entries():
     assert result.exit_code == 0
     for group_name in ["Root", "MyGroup"]:
         assert group_name in result.stdout
-    for entry_name in ["Test Root Entry", "gmail"]:
+    for entry_name in ["Test Root Entry", *GROUP_ENTRY_NAMES]:
         assert entry_name in result.stdout
 
 
@@ -46,7 +48,7 @@ def test_list_groups_with_entries():
 def test_list_single_group_with_entries():
     result = runner.invoke(app, ["ls", "-g", "mygr", "--entries"])
     assert result.exit_code == 0
-    for name in ["MyGroup", "gmail"]:
+    for name in ["MyGroup", *GROUP_ENTRY_NAMES]:
         assert name in result.stdout
     for name in ["Root", "Test Root Entry"]:
         assert name not in result.stdout
@@ -107,6 +109,37 @@ def test_get(command, password_expected):
     else:
         assert "testpass" not in result.stdout
         assert "********" in result.stdout
+
+
+@pytest.mark.parametrize(
+    "command,password_expected",
+    [
+        (["get", "entry with no username"], False), 
+        (["get", "entry with no username", "--show-password"], True)
+    ],
+)
+@patch.dict(environ, get_env_vars("test_db"))
+def test_get_entry_with_no_username(command, password_expected):
+    result = runner.invoke(app, command)
+    assert result.exit_code == 0
+    assert "MyGroup/Entry with no username" in result.stdout
+    assert ("testpass" in result.stdout) == password_expected
+    assert ("****" in result.stdout) == (not password_expected)
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        (["get", "entry with no password"]), 
+        (["get", "entry with no password", "--show-password"])
+    ],
+)
+@patch.dict(environ, get_env_vars("test_db"))
+def test_get_entry_with_no_password(command):
+    result = runner.invoke(app, command)
+    assert result.exit_code == 0
+    assert "MyGroup/Entry with no password" in result.stdout
+    assert "" in result.stdout
 
 
 @pytest.mark.parametrize(
