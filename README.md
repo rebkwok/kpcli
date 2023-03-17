@@ -165,14 +165,32 @@ Notes: This is my main email address
 
 ##### Copy an attribute (default password) from an entry to the clipboard  
 If multiple entries match, kpcli prompts for a selection.
+Password copy times out after 5 seconds by default (change by setting `KEEPASS_TIMEOUT` in `config.ini`)
+
 ```console
 $ kpcli cp comm/email
 Entry: Communications/my email
-password copied to clipboard
+Password copied to clipboard; timeout in 5 seconds
+Press any key to clear clipboard and exit: 
+
 
 $ kpcli cp comm/email username
 Entry: Communications/my email
 username copied to clipboard
+```
+
+##### Copy both username and password from an entry to the clipboard 
+Copies first the username, waits for a keypress, then password.
+
+```console
+$ kpcli cp comm/email both
+Entry: Communications/my email
+
+Username 'me@myemail.com' copied to clipboard
+Press any key to copy password: c
+
+Password copied to clipboard; timeout in 5 seconds
+Press any key to clear clipboard and exit: 
 ```
 
 ##### Add an entry
