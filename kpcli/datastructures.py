@@ -77,6 +77,8 @@ class CopyOption(str, Enum):
     u = "u"
     password = "password"
     p = "p"
+    userpass = "both"
+    b = "b"
     url = "url"
     notes = "notes"
 
@@ -85,6 +87,8 @@ class CopyOption(str, Enum):
             return "username"
         elif self.value == "p":
             return "password"
+        elif self.value == "b":
+            return "both"
         return self.value
 
 

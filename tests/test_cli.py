@@ -177,12 +177,19 @@ def test_copy_multiple_matches(
 @pytest.mark.parametrize(
     "command,expected_args",
     [
+        # copies password by default, then copies empty string
         (
             ["cp", "gmail"],
             ["testpass", ""],
-        ),  # copies password by default, then copies empty string
-        (["cp", "gmail", "username"], ["test@test.com"]),  # copy username
-        (["cp", "gmail", "u"], ["test@test.com"]),  # copy username with abbreviation
+        ),
+        # copy username
+        (["cp", "gmail", "username"], ["test@test.com"]),
+        # copy username with abbreviation
+        (["cp", "gmail", "u"], ["test@test.com"]),
+        # copy both; username then password, then empty string
+        (["cp", "gmail", "both"], ["test@test.com", "testpass", ""]),
+        # copy both with abbreviation
+        (["cp", "gmail", "b"], ["test@test.com", "testpass", ""]),
     ],
 )
 @patch.dict(environ, get_env_vars("test_db"))

@@ -266,6 +266,14 @@ def get_or_prompt_single_entry(ctx: typer.Context, name):
         return entries[0]
 
 
+def copy_item(connector, entry, item):
+    try:
+        connector.copy_to_clipboard(entry, str(item))
+    except ValueError as e:
+        typer.secho(str(e), fg=typer.colors.RED)
+        raise typer.Exit()
+
+
 @app.command("cp")
 def copy_entry_attribute(
     ctx: typer.Context,
@@ -273,19 +281,34 @@ def copy_entry_attribute(
     item: CopyOption = typer.Argument(CopyOption.password, help="Attribute to copy"),
 ):
     """
-    Copy entry attribute to clipboard (username, password, url, notes)
+    Copy entry attribute to clipboard (username, password, both, url, notes)
     Password is kept on clipboard until user confirms, or timeout is reached (5 seconds by default)
     """
     obj = get_obj_from_ctx(ctx)
     entry = get_or_prompt_single_entry(ctx, name)
     typer.echo(f"Entry: {entry.group.name}/{entry.title}")
-    try:
-        ctx_connector(ctx).copy_to_clipboard(entry, str(item))
-    except ValueError as e:
-        typer.secho(str(e), fg=typer.colors.RED)
-        raise typer.Exit()
 
-    if item == CopyOption.password:
+    connector = ctx_connector(ctx)
+
+    if str(item) == CopyOption.userpass:
+        # copy username first and wait for prompt to continue to password
+        copy_item(connector, entry, CopyOption.username)
+        typer.secho(
+            f"Username {entry.username} copied to clipboard",
+            fg=typer.colors.YELLOW,
+        )
+        typer.prompt(
+            typer.style(
+                f"Press any key to copy password",
+                fg=typer.colors.MAGENTA,
+                bold=True,
+            )
+        )
+        copy_item(connector, entry, CopyOption.password)
+    else:
+        copy_item(connector, entry, item)
+    
+    if str(item) in [CopyOption.password, CopyOption.userpass]:
         # Clear the clipboard after a timeout unless the user indicates they're done with it earlier
         timeout = obj.paste_timeout
         try:
