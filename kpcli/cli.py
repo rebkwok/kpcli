@@ -276,7 +276,7 @@ def copy_item(connector, entry, item):
 @app.command("cp")
 def copy_entry_attribute(
     ctx: typer.Context,
-    name: str = typer.Argument(..., help="group/title (or part thereof) of entry"),
+    entry: str = typer.Argument(..., help="group/title (or part thereof) of entry"),
     item: CopyOption = typer.Argument(CopyOption.password, help="Attribute to copy"),
 ):
     """
@@ -284,7 +284,7 @@ def copy_entry_attribute(
     Password is kept on clipboard until user confirms, or timeout is reached (5 seconds by default)
     """
     obj = get_obj_from_ctx(ctx)
-    entry = get_or_prompt_single_entry(ctx, name)
+    entry = get_or_prompt_single_entry(ctx, entry)
     typer.echo(f"Entry: {entry.group.name}/{entry.title}")
 
     connector = ctx_connector(ctx)

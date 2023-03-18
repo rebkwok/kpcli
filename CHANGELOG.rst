@@ -1,3 +1,7 @@
+0.4.1
+-----
+- Rename `name` argument to `cp` to `entry`
+
 0.4.0
 -----
 - Option to copy both username and password
