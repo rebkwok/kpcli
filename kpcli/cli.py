@@ -2,6 +2,7 @@
 # standards
 import logging
 import signal
+import sys
 from typing import Optional
 
 # third parties
@@ -136,7 +137,6 @@ def list_groups_and_entries(
     """
     List groups and entries
     """
-    setup_db(ctx)
     if group_name:
         group = validate_group(ctx, group_name)
         group_names = [group.name]
@@ -232,7 +232,6 @@ def get_entry(
     """
     Fetch details for a single entry
     """
-    setup_db(ctx)
     entries = ctx_connector(ctx).find_entries(name)
     if not entries:
         typer.echo("No matching entry found")
@@ -352,7 +351,6 @@ def edit_entry(
     """
     Edit entry attribute (other than password)
     """
-    setup_db(ctx)
     entry = get_or_prompt_single_entry(ctx, name)
     typer.echo(f"Entry: {entry.group.name}/{entry.title}")
     ctx_connector(ctx).edit_entry(entry, str(field), new_value)
@@ -372,7 +370,6 @@ def delete_entry(
     """
     Delete entry
     """
-    setup_db(ctx)
     entry = get_or_prompt_single_entry(ctx, name)
     entry_string = f"{entry.group.name}/{entry.title}"
     typer.secho(f"Deleting entry: {entry_string}", fg=typer.colors.RED)
@@ -402,7 +399,6 @@ def change_password(
         f"{entry.group.name}/{entry.title}: password updated", fg=typer.colors.GREEN
     )
 
-
 @app.callback()
 def main(
     ctx: typer.Context,
@@ -422,12 +418,13 @@ def main(
     logging.basicConfig(level=loglevel.upper())
     ctx.ensure_object(dict)
     ctx.obj["profile"] = profile
-    if not ctx.invoked_subcommand:
+    if "--help" not in sys.argv:
         setup_db(ctx)
 
 def setup_db(ctx):
     # Instantiate the relevant database utility object on the Context
     config, store_encrypted_password = get_config(profile=ctx.obj["profile"])
+    typer.secho("UNLOCKING...\n", fg=typer.colors.YELLOW)
     encrypter = Encrypter(store_encrypted_password=store_encrypted_password)
     if config.password is None:
         # If a password wasn't found in the config file or environment, prompt the use for it
