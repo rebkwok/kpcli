@@ -1,3 +1,9 @@
+0.5.0
+-----
+- Drop support for Python 3.7
+- Bump requirements
+- Fix an issue with group validation
+
 0.4.1
 -----
 - Rename `name` argument to `cp` to `entry`
