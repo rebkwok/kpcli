@@ -243,8 +243,8 @@ def test_add_with_missing_group(temp_db_path):
             "carrot",
         ],
     )
-    assert result.exit_code == 1
-    assert "--group is required" in result.stdout
+    # no group provided as parameter, prompts for it
+    assert "Group name (partial matches allowed) [root]:" in result.stdout
 
 
 @patch.dict(environ, get_env_vars("temp_db"))

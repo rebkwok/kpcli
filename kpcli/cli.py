@@ -37,14 +37,15 @@ def get_obj_from_ctx(ctx):
     return ctx.obj["obj"]
 
 
-def validate_group(ctx: typer.Context, group_name):
-    """Find the first group matching group_name"""    
+def validate_group(ctx: typer.Context, group_name: str):
+    """Find the first group matching group_name"""   
+    if ctx.resilient_parsing:
+        return 
     obj = get_obj_from_ctx(ctx)
     group = ctx_connector(ctx).find_group(group_name)
     if group is None:
         typer.echo(f"No group matching '{group_name}' found")
         raise typer.Exit(1)
-    typer.echo(f"Group found: {group.name}")
     obj.group = group
     return group
 
@@ -160,15 +161,14 @@ def add_group(
     base_group: str = typer.Option(
         "root",
         prompt="Base group name (partial matches allowed)",
-        callback=validate_group,
     ),
-    new_group_name: str = typer.Option(
-        ..., prompt=True, callback=validate_new_group_name
-    ),
+    new_group_name: str = typer.Option(..., prompt=True),
 ):
     """
     Add a new group
     """
+    base_group = validate_group(ctx, base_group)
+    new_group_name = validate_new_group_name(ctx, new_group_name)
     ctx_connector(ctx).add_group(new_group_name, base_group)
     typer.secho(
         f"New group {new_group_name} added in {base_group.name}", fg=typer.colors.GREEN
@@ -179,12 +179,13 @@ def add_group(
 def delete_group(
     ctx: typer.Context,
     group: str = typer.Argument(
-        ..., help="name (or part thereof) of group to delete", callback=validate_group
+        ..., help="name (or part thereof) of group to delete"
     ),
 ):
     """
     Delete group
     """
+    group = validate_group(ctx, group)
     group_name = group.name
     typer.secho(
         f"Deleting group: {group.name}. All entries in the group will be deleted.",
@@ -200,9 +201,9 @@ def delete_group(
 def add_entry(
     ctx: typer.Context,
     group: str = typer.Option(
-        "root", prompt="Group name (partial matches allowed)", callback=validate_group
+        "root", prompt="Group name (partial matches allowed)"
     ),
-    title: str = typer.Option(..., prompt=True, callback=validate_title),
+    title: str = typer.Option(..., prompt=True),
     username: str = typer.Option(..., prompt=True),
     password: str = typer.Option(..., prompt=True, hide_input=True),
     url: str = typer.Option("", prompt=True),
@@ -211,6 +212,8 @@ def add_entry(
     """
     Add a new entry
     """
+    group = validate_group(ctx, group)
+    title = validate_title(ctx, title)
     ctx_connector(ctx).add_new_entry(group, title, username, password, url, notes)
     echo_banner("New entry added")
     typer.echo(
