@@ -1,3 +1,16 @@
+
+# DEPRECATED
+
+This package is deprecated and is no longer actively maintained.
+
+KeePassX has been deprecated since 2021. Please consider switching to [KeePassXC](https://keepassxc.org/) which is
+based on KeePassX and is compatible with the same .kdbx file format. KeePassXC ships with a command line utility
+which does more or less everything you'd want `kpcli` for (and some more).
+
+------------------
+
+
+
 ![https://github.com/rebkwok/kpcli/workflows/Run%20tests/badge.svg](https://github.com/rebkwok/kpcli/workflows/Run%20tests/badge.svg)
 
 # kpcli
